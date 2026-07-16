@@ -745,11 +745,7 @@
         }));
         for (const item of sede.items) {
           const tituloItem = item.nombre || "Prueba";
-          children.push(new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 120, after: 60 },
-            children: [new TextRun({ text: tituloItem, bold: true, size: 24, font: FONT, color: "0F172A" })]
-          }));
+          // (Se quitó el subtítulo por prueba: era repetitivo con el pie de foto y saturaba el índice al anexar.)
           if (item.img && item.img.dataUrl) {
             figN++;
             let h = Math.round(TARGET_WIDTH_PX * (item.img.h / item.img.w));
@@ -758,7 +754,7 @@
               const imgBytes = await getImageBytes(item.img.dataUrl);
               children.push(new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 40, after: 20 },
+                spacing: { before: 200, after: 20 },
                 children: [new ImageRun({
                   data: imgBytes,
                   transformation: { width: TARGET_WIDTH_PX, height: h }
@@ -782,7 +778,7 @@
                 spacing: { before: 40, after: 160 },
                 shading: { type: "clear", fill: "FEE2E2" },
                 children: [new TextRun({
-                  text: `[ERROR al procesar imagen de Supabase para ${nombre}]`,
+                  text: `[ERROR al procesar la imagen: ${tituloItem} — ${nombre}]`,
                   bold: true, color: "DC2626", size: 20, font: FONT
                 })]
               }));
@@ -791,10 +787,10 @@
             faltantes.push(`${tituloItem} — ${nombre}`);
             children.push(new Paragraph({
               alignment: AlignmentType.CENTER,
-              spacing: { before: 40, after: 160 },
+              spacing: { before: 200, after: 160 },
               shading: { type: "clear", fill: "FEE2E2" },
               children: [new TextRun({
-                text: `[ALERTA: Evidencia no cargada para esta prueba - ${nombre}]`,
+                text: `[ALERTA: Evidencia no cargada para esta prueba: ${tituloItem} — ${nombre}]`,
                 bold: true, color: "DC2626", size: 20, font: FONT
               })]
             }));
