@@ -82,3 +82,875 @@
       <div class="flex gap-2 pt-2">
         <button id="btn-login" class="w-full py-2.5 text-sm font-semibold rounded-lg bg-signal hover:bg-signalDark text-white shadow-sm transition">Ingresar</button>
       </div>
+      <p id="login-error" class="text-center text-xs text-red-600 font-medium min-h-[1rem]"></p>
+    </div>
+  </div>
+
+  <header class="no-print sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 flex-wrap">
+      <div class="flex items-center gap-3">
+        <div class="h-9 w-9 rounded-lg bg-signalDark flex items-center justify-center text-white font-bold">ATP</div>
+        <div>
+          <h1 class="text-base sm:text-lg font-semibold leading-tight flex items-center gap-1.5">
+            Colector de Evidencias ATP
+            <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="Sincronizado con Supabase"></span>
+          </h1>
+          <p class="text-xs text-slate-500 leading-tight">Acceptance Test Procedure · Reporte consolidado en Supabase</p>
+        </div>
+      </div>
+
+      <div class="flex-1"></div>
+
+      <div class="w-full sm:w-64">
+        <div class="flex items-center justify-between text-xs mb-1">
+          <span class="font-medium text-slate-600">Total nacional de evidencias</span>
+          <span id="global-count" class="font-mono text-slate-500">0 / 0</span>
+        </div>
+        <div class="meter-track h-2 w-full">
+          <div id="global-meter" class="meter-fill w-0 bg-emerald-500"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btn-reset" class="px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">Reiniciar Plantilla</button>
+        <button id="btn-logout" class="px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 transition">Salir</button>
+        <button id="btn-generate" class="px-4 py-2 text-sm font-semibold rounded-lg bg-signal hover:bg-signalDark text-white shadow-sm disabled:opacity-50">
+          Generar Word
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
+    
+    <aside class="no-print w-full lg:w-72 shrink-0 lg:sticky lg:top-20 h-[calc(100vh-120px)] overflow-y-auto bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
+      <div>
+        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          📊 Monitoreo Nacional 
+          <span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-1.5 py-0.5 rounded font-mono">EN VIVO</span>
+        </h3>
+        <p class="text-[11px] text-slate-400">Haz clic en una sede para ir a sus evidencias</p>
+      </div>
+      
+      <div id="dashboard-list" class="flex-1 space-y-1.5 overflow-y-auto pr-1"></div>
+    </aside>
+
+    <div class="flex-1 space-y-6">
+      
+      <section class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3">Datos generales del proyecto</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <label class="block">
+            <span class="text-xs font-medium text-slate-500">Proyecto</span>
+            <input data-meta="proyecto" type="text" placeholder="Ej: Red de Acceso Nacional"
+                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
+          </label>
+          <label class="block">
+            <span class="text-xs font-medium text-slate-500">Cliente</span>
+            <input data-meta="cliente" type="text" placeholder="Ej: ONPE / Claro"
+                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
+          </label>
+          <label class="block">
+            <span class="text-xs font-medium text-slate-500">Elaborado por</span>
+            <input data-meta="autor" type="text" placeholder="Ej: Coordinador ATP"
+                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
+          </label>
+          <label class="block">
+            <span class="text-xs font-medium text-slate-500">Fecha</span>
+            <input data-meta="fecha" type="date"
+                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
+          </label>
+        </div>
+      </section>
+
+      <div class="no-print flex items-start gap-2 text-xs text-slate-500 bg-white border border-slate-200 rounded-lg px-4 py-2">
+        <span class="mt-0.5">💡</span>
+        <p>¡Hola! Selecciona tu sede en el monitor de la izquierda. Selecciona un cuadro y pega tu evidencia con <span class="font-mono font-semibold text-slate-700">Ctrl+V</span>, o súbela directo desde tu celular usando el botón "Subir / Cámara".</p>
+      </div>
+
+      <div id="sedes-container" class="space-y-6"></div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button id="btn-add-sede" class="flex-1 px-4 py-3 rounded-xl border-2 border-dashed border-signal/40 text-signalDark font-semibold hover:bg-blue-50 transition">
+          + Agregar Nueva Sede Personalizada
+        </button>
+        <button id="btn-generate-2" class="flex-1 px-4 py-3 rounded-xl bg-signal hover:bg-signalDark text-white font-semibold shadow-sm">
+          Descargar Reporte Word (.docx)
+        </button>
+      </div>
+
+      <p id="status-line" class="text-center text-sm text-slate-500 h-5 font-medium"></p>
+    </div>
+  </main>
+
+  <footer class="no-print max-w-[1400px] mx-auto px-6 pb-10 pt-2 text-center text-xs text-slate-400">
+    Herramienta de Consolidación · Sincronizada en vivo mediante Supabase
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // ---------- Configuración de Supabase ----------
+    const supabaseUrl = "https://ocswemmnxsospjhwyaiv.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jc3dlbW1ueHNvc3BqaHd5YWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNjU2MDYsImV4cCI6MjA5OTc0MTYwNn0.qgjDuq5XZbqszHI0cMMOCSpW0_ep8RtkMx3xgIgGrVk";
+
+    // Inicializar cliente de Supabase
+    const sb = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // Identificador único de esta pestaña para evitar bucles de sobreescritura (Race Conditions)
+    const tabId = Math.random().toString(36).substring(7);
+
+    // ---------- Estructura del ATP Nacional ----------
+    const SEDES_PREDEFINIDAS = [
+      "LURIN", "INDUSTRIAL", "ABANCAY", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+      "CHACHAPOYAS", "CHICLAYO", "CUSCO", "HUANCAYO", "HUANUCO", "HUARAZ",
+      "ICA", "IQUITOS", "LIMA", "PIURA", "PUCALLPA", "PUNO", "TACNA",
+      "TARAPOTO", "TRUJILLO", "HUANCAVELICA"
+    ];
+
+    const ITEMS_PREDEFINIDOS = [
+      "Conectividad a la sede cabecera",
+      "Conectividad a internet",
+      "Navegación",
+      "Ancho de banda",
+      "Captura de tráfico encriptado por main",
+      "Captura de tráfico encriptado por backup",
+      "Prueba de alta disponibilidad",
+      "Caída de main",
+      "Prueba de Tracert"
+    ];
+
+    const CM_TO_PX = 37.795275591; // 96 dpi
+    const TARGET_WIDTH_PX = Math.round(14 * CM_TO_PX); // 14 cm ≈ 529 px
+
+    // ---------- Utilidades de Selección DOM ----------
+    const $ = (sel, ctx = document) => ctx.querySelector(sel);
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    // OBTENER CONTENEDOR GLOBAL DE SEDES (Declarado arriba de forma segura)
+    const container = $("#sedes-container");
+
+    // ---------- Estado de la Aplicación ----------
+    let uid = 1;
+    const nid = () => "id" + (uid++);
+
+    let state = {
+      meta: { proyecto: "", cliente: "", autor: "", fecha: new Date().toISOString().slice(0, 10) },
+      sedes: []
+    };
+
+    let activeDropzone = null; // { sedeId, itemId }
+    let isWriting = false;     // Evita loops infinitos de actualización
+    let pendingState = null;   // Almacena actualizaciones mientras el usuario escribe
+
+    function makeItem(nombre) {
+      return { id: nid(), nombre, descripcion: nombre, img: null };
+    }
+    
+    // Función para crear la plantilla inicial completa
+    function makeDefaultState() {
+      const defaultSedes = SEDES_PREDEFINIDAS.map(name => {
+        const sId = nid();
+        return {
+          id: sId,
+          nombre: name,
+          items: ITEMS_PREDEFINIDOS.map(testName => ({
+            id: nid(),
+            nombre: testName,
+            descripcion: testName,
+            img: null
+          }))
+        };
+      });
+      return {
+        meta: { proyecto: "", cliente: "", autor: "", fecha: new Date().toISOString().slice(0, 10) },
+        sedes: defaultSedes
+      };
+    }
+
+    function findSede(id) { return state.sedes.find(s => s.id === id); }
+    function findItem(sedeId, itemId) {
+      const s = findSede(sedeId);
+      return s ? s.items.find(i => i.id === itemId) : null;
+    }
+
+    // ---------- Autenticación Supabase ----------
+    sb.auth.onAuthStateChange((event, session) => {
+      const loginCard = $("#login-container");
+      if (session && session.user) {
+        loginCard.classList.add("hidden");
+        initSync();
+      } else {
+        loginCard.classList.remove("hidden");
+        if (container) container.innerHTML = "";
+      }
+    });
+
+    $("#btn-login").addEventListener("click", async () => {
+      const email = $("#login-email").value;
+      const pass = $("#login-pass").value;
+      const errEl = $("#login-error");
+      errEl.textContent = "";
+
+      if (!email || !pass) { errEl.textContent = "Por favor completa todos los campos."; return; }
+      setStatus("Iniciando sesión...");
+      
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) {
+        setStatus("", false);
+        errEl.textContent = "Error: " + error.message;
+      } else {
+        setStatus("Sesión iniciada ✓");
+      }
+    });
+
+    $("#btn-logout").addEventListener("click", async () => {
+      if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+        await sb.auth.signOut();
+      }
+    });
+
+    // ---------- Sincronización en la nube (Postgres + Realtime) ----------
+    async function saveToCloud() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        setStatus("Error: No hay una sesión de usuario activa.", true);
+        return;
+      }
+      
+      isWriting = true;
+      try {
+        state.last_changed_by = tabId;
+        const { error } = await sb.from("reports").upsert({ id: "consolidado_atp", data: state });
+        if (error) {
+          console.error("Error de Supabase:", error);
+          setStatus("Error al sincronizar: " + error.message, true);
+        } else {
+          setStatus("Base de datos en línea ✓");
+        }
+      } catch (e) {
+        console.error("Error en try-catch:", e);
+        setStatus("Error crítico al guardar en la nube.", true);
+      }
+      isWriting = false;
+    }
+
+    let saveTimeout;
+    function debouncedSave() {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        saveToCloud();
+      }, 700);
+    }
+
+    async function initSync() {
+      setStatus("Conectando base de datos...");
+      
+      // 1. Cargar el estado inicial de la nube
+      try {
+        const { data, error } = await sb
+          .from("reports")
+          .select("data")
+          .eq("id", "consolidado_atp")
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data && data.data) {
+          const cloudData = data.data;
+          
+          // Escanear los IDs existentes para no colisionar con la base de datos
+          let max = 0;
+          const scan = (id) => { const n = parseInt(String(id).replace("id", ""), 10); if (!isNaN(n) && n > max) max = n; };
+          cloudData.sedes.forEach(s => { scan(s.id); s.items.forEach(i => scan(i.id)); });
+          uid = max + 1;
+
+          // ================= MIGRACIÓN INTELIGENTE EN CALIENTE =================
+          let huboMigracion = false;
+          cloudData.sedes.forEach(sede => {
+            const nombresExistentes = sede.items.map(item => item.nombre.trim().toLowerCase());
+            ITEMS_PREDEFINIDOS.forEach(testName => {
+              if (!nombresExistentes.includes(testName.trim().toLowerCase())) {
+                sede.items.push({
+                  id: nid(),
+                  nombre: testName,
+                  descripcion: testName,
+                  img: null
+                });
+                huboMigracion = true;
+              }
+            });
+          });
+
+          const isTyping = document.activeElement && 
+                           (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
+          
+          if (!isTyping) {
+            state = cloudData;
+            render();
+            if (huboMigracion) {
+              await saveToCloud();
+              setStatus("Base de datos sincronizada y migrada con nuevas pruebas ✓");
+            }
+          } else {
+            pendingState = cloudData;
+          }
+        } else {
+          // Si no hay datos, inicializamos con las 22 sedes predefinidas nacionales
+          state = makeDefaultState();
+          await saveToCloud();
+          render();
+        }
+        setStatus("Base de datos en línea ✓");
+      } catch (e) {
+        console.error(e);
+        setStatus("Error al cargar la base de datos.", true);
+      }
+
+      // 2. Escuchar cambios en tiempo real en la tabla de Supabase
+      sb.channel('reports_channel')
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'reports', filter: 'id=eq.consolidado_atp' },
+          (payload) => {
+            if (isWriting) return;
+            const cloudData = payload.new.data;
+            if (!cloudData) return;
+
+            if (cloudData.last_changed_by === tabId) {
+              return;
+            }
+
+            const isTyping = document.activeElement && 
+                             (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
+            
+            if (!isTyping) {
+              state = cloudData;
+              render();
+            } else {
+              pendingState = cloudData;
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    document.addEventListener("focusout", () => {
+      if (pendingState) {
+        state = pendingState;
+        pendingState = null;
+        render();
+      }
+    });
+
+    // ---------- Subida de imágenes a Supabase Storage ----------
+    async function handleBlobCloud(blob, target) {
+      if (!blob || !/^image\//.test(blob.type)) return;
+      setStatus("Subiendo imagen a la nube... (esto puede demorar un poco)");
+
+      const ext = blob.type.split("/")[1] || "png";
+      const filename = `${target.sedeId}_${target.itemId}_${Date.now()}.${ext}`;
+
+      try {
+        const { data, error } = await sb.storage
+          .from("evidencias")
+          .upload(filename, blob, { contentType: blob.type, upsert: true });
+
+        if (error) throw error;
+
+        const { data: urlData } = sb.storage
+          .from("evidencias")
+          .getPublicUrl(filename);
+
+        const downloadUrl = urlData.publicUrl;
+
+        const im = new Image();
+        im.onload = async () => {
+          const item = findItem(target.sedeId, target.itemId);
+          if (!item) return;
+          item.img = { dataUrl: downloadUrl, w: im.naturalWidth, h: im.naturalHeight, mime: blob.type || "image/png" };
+          render();
+          await saveToCloud();
+          setStatus("Evidencia subida con éxito ✓");
+        };
+        im.src = downloadUrl;
+      } catch (e) {
+        console.error(e);
+        setStatus("Error al subir imagen. Verifica el Storage.", true);
+      }
+    }
+
+    // ---------- Render e Integridad en vivo ----------
+    function render() {
+      if (state.sedes.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-xl border border-dashed border-slate-300 p-10 text-center text-slate-400">
+            Aún no hay sedes creadas. Haz clic en el botón de abajo o "Reiniciar Plantilla" para iniciar.
+          </div>`;
+      } else {
+        container.innerHTML = state.sedes.map((sede, si) => sedeHTML(sede, si)).join("");
+      }
+
+      document.querySelectorAll("[data-meta]").forEach(inp => {
+        inp.value = state.meta[inp.getAttribute("data-meta")] || "";
+      });
+
+      restoreActive();
+      updateMeters();
+      renderDashboard(); // Actualizar el dashboard lateral en cada cambio
+    }
+
+    // Dibuja la lista lateral del Dashboard con navegación por scroll
+    function renderDashboard() {
+      const dash = $("#dashboard-list");
+      if (!dash) return;
+
+      dash.innerHTML = state.sedes.map(sede => {
+        const total = sede.items.length;
+        const cargadas = sede.items.filter(i => i.img).length;
+        
+        let colorClass = "text-red-600 bg-red-50 border-red-200 hover:bg-red-100";
+        if (cargadas === total && total > 0) {
+          colorClass = "text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100";
+        } else if (cargadas > 0) {
+          colorClass = "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100";
+        }
+
+        return `
+          <button onclick="document.getElementById('${sede.id}').scrollIntoView({ behavior: 'smooth', block: 'center' })"
+                  class="w-full flex items-center justify-between text-left p-2 rounded-lg border text-[11px] font-bold transition ${colorClass}">
+            <span class="truncate pr-1 uppercase">${esc(sede.nombre || "SEDE SIN NOMBRE")}</span>
+            <span class="font-mono shrink-0 bg-white/70 px-1.5 py-0.5 rounded border border-current/20">${cargadas}/${total}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function sedeHTML(sede, si) {
+      const cargadas = sede.items.filter(i => i.img).length;
+      const total = sede.items.length;
+      const pct = total ? Math.round((cargadas / total) * 100) : 0;
+      const complete = cargadas === total && total > 0;
+      const barColor = complete ? "bg-emerald-500" : (cargadas === 0 ? "bg-slate-400" : "bg-amber-500");
+
+      return `
+      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden scroll-mt-24" id="${sede.id}" data-sede-card="${sede.id}">
+        <div class="flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-slate-100 bg-slate-50/60">
+          <span class="font-mono text-xs text-slate-400">${String(si + 1).padStart(2, "0")}</span>
+          <div class="flex-1">
+            <input data-field="sede-nombre" data-sede="${sede.id}" value="${esc(sede.nombre)}"
+                   placeholder="NOMBRE DE LA SEDE (ej: SEDE ABANCAY)"
+                   class="w-full bg-transparent text-base font-bold uppercase tracking-wide placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-signal rounded px-2 py-1" />
+          </div>
+          <div class="hidden sm:flex items-center gap-2 w-40">
+            <div class="meter-track h-1.5 flex-1"><div class="meter-fill ${barColor}" style="width:${pct}%"></div></div>
+            <span class="font-mono text-xs text-slate-500 w-10 text-right">${cargadas}/${total}</span>
+          </div>
+          <button data-action="remove-sede" data-sede="${sede.id}" title="Eliminar sede"
+                  class="text-slate-400 hover:text-red-600 rounded-lg p-1.5 hover:bg-red-50">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+          </button>
+        </div>
+
+        <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${sede.items.map(item => itemHTML(sede, item)).join("")}
+        </div>
+
+        <div class="px-4 sm:px-5 pb-4">
+          <button data-action="add-item" data-sede="${sede.id}"
+                  class="text-sm text-signalDark font-medium hover:underline">+ Agregar ítem personalizado para esta sede</button>
+        </div>
+      </section>`;
+    }
+
+    function itemHTML(sede, item) {
+      const dzAttrs = `data-role="dropzone" data-sede="${sede.id}" data-item="${item.id}" tabindex="0"`;
+      let inner;
+
+      if (item.img) {
+        inner = `
+          <div class="relative">
+            <img src="${item.img.dataUrl}" alt="evidencia"
+                 class="w-full h-40 object-contain bg-slate-50 rounded-lg border border-slate-200" />
+            <button data-action="remove-img" data-sede="${sede.id}" data-item="${item.id}" title="Eliminar imagen"
+                    class="absolute top-1.5 right-1.5 bg-white/90 hover:bg-red-600 hover:text-white text-slate-600 rounded-full p-1 shadow border border-slate-200">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+            <span class="absolute bottom-1.5 left-1.5 font-mono text-[10px] bg-white/90 border border-slate-200 rounded px-1.5 py-0.5 text-slate-500">
+              ${item.img.w}×${item.img.h}px
+            </span>
+          </div>`;
+      } else {
+        inner = `
+          <div class="dropzone has-none rounded-lg h-40 flex flex-col items-center justify-center text-center px-3" ${dzAttrs}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+            <p class="mt-2 text-xs font-medium text-slate-500">Haz clic y pega <span class="font-mono">Ctrl+V</span></p>
+            <p class="text-[11px] text-slate-400">o arrastra una imagen aquí</p>
+          </div>`;
+      }
+
+      return `
+        <div class="rounded-xl border border-slate-200 p-3 flex flex-col gap-2 bg-white">
+          <div class="flex items-center gap-2">
+            <input data-field="item-nombre" data-sede="${sede.id}" data-item="${item.id}" value="${esc(item.nombre)}"
+                   class="flex-1 text-sm font-semibold text-slate-700 bg-transparent focus:outline-none focus:ring-2 focus:ring-signal rounded px-1.5 py-1" />
+            <button data-action="remove-item" data-sede="${sede.id}" data-item="${item.id}" title="Eliminar ítem"
+                    class="text-slate-300 hover:text-red-600 rounded p-1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+          </div>
+
+          ${inner}
+
+          <div class="flex items-center gap-2 -mt-0.5">
+            <button data-action="pick-file" data-sede="${sede.id}" data-item="${item.id}"
+                    class="text-[11px] font-medium text-signalDark hover:underline">📎 Subir / Cámara</button>
+            <input type="file" accept="image/*" data-file-input data-sede="${sede.id}" data-item="${item.id}" class="hidden" />
+          </div>
+
+          <label class="block">
+            <span class="text-[11px] text-slate-400">Descripción de la prueba</span>
+            <input data-field="item-desc" data-sede="${sede.id}" data-item="${item.id}" value="${esc(item.descripcion)}"
+                   class="mt-0.5 w-full text-xs rounded-md border border-slate-200 px-2 py-1.5 focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
+          </label>
+        </div>`;
+    }
+
+    function updateMeters() {
+      let total = 0, cargadas = 0;
+      state.sedes.forEach(s => s.items.forEach(i => { total++; if (i.img) cargadas++; }));
+      const pct = total ? Math.round((cargadas / total) * 100) : 0;
+      const meter = $("#global-meter");
+      if (meter) {
+        meter.style.width = pct + "%";
+        meter.className = "meter-fill " + (total > 0 && cargadas === total ? "bg-emerald-500" : (cargadas === 0 ? "bg-slate-400" : "bg-amber-500"));
+      }
+      const countEl = $("#global-count");
+      if (countEl) countEl.textContent = `${cargadas} / ${total}`;
+    }
+
+    function setActive(sedeId, itemId) {
+      activeDropzone = { sedeId, itemId };
+      document.querySelectorAll(".dropzone").forEach(dz => {
+        const on = dz.getAttribute("data-sede") === sedeId && dz.getAttribute("data-item") === itemId;
+        dz.classList.toggle("is-active", on);
+      });
+    }
+    function restoreActive() {
+      if (!activeDropzone) return;
+      const dz = document.querySelector(`.dropzone[data-sede="${activeDropzone.sedeId}"][data-item="${activeDropzone.itemId}"]`);
+      if (dz) dz.classList.add("is-active");
+      else activeDropzone = null;
+    }
+
+    function setStatus(msg, isError) {
+      const el = $("#status-line");
+      if (el) {
+        el.textContent = msg;
+        el.className = "text-center text-sm h-5 " + (isError ? "text-red-600 animate-bounce" : "text-emerald-600");
+      }
+    }
+
+    // ================= DELEGACIÓN DE EVENTOS =================
+
+    document.addEventListener("click", (e) => {
+      const dz = e.target.closest(".dropzone");
+      if (dz && !e.target.closest("[data-action]")) {
+        setActive(dz.getAttribute("data-sede"), dz.getAttribute("data-item"));
+        dz.focus();
+        return;
+      }
+      const btn = e.target.closest("[data-action]");
+      if (!btn) return;
+      const action = btn.getAttribute("data-action");
+      const sedeId = btn.getAttribute("data-sede");
+      const itemId = btn.getAttribute("data-item");
+
+      if (action === "remove-sede") {
+        const s = findSede(sedeId);
+        if (s && confirm(`¿Eliminar "${s.nombre || "sede sin nombre"}" y todas sus evidencias?`)) {
+          state.sedes = state.sedes.filter(x => x.id !== sedeId);
+          if (activeDropzone && activeDropzone.sedeId === sedeId) activeDropzone = null;
+          render(); saveToCloud();
+        }
+      } else if (action === "add-item") {
+        const s = findSede(sedeId);
+        if (s) { s.items.push(makeItem("Prueba adicional")); render(); saveToCloud(); }
+      } else if (action === "remove-item") {
+        const s = findSede(sedeId);
+        if (s) {
+          s.items = s.items.filter(i => i.id !== itemId);
+          if (activeDropzone && activeDropzone.itemId === itemId) activeDropzone = null;
+          render(); saveToCloud();
+        }
+      } else if (action === "remove-img") {
+        const it = findItem(sedeId, itemId);
+        if (it) { it.img = null; render(); saveToCloud(); }
+      } else if (action === "pick-file") {
+        const input = document.querySelector(`input[data-file-input][data-sede="${sedeId}"][data-item="${itemId}"]`);
+        if (input) input.click();
+      }
+    });
+
+    if (container) {
+      container.addEventListener("change", (e) => {
+        const inp = e.target.closest("input[data-file-input]");
+        if (!inp || !inp.files || !inp.files[0]) return;
+        handleBlobCloud(inp.files[0], { sedeId: inp.getAttribute("data-sede"), itemId: inp.getAttribute("data-item") });
+        inp.value = "";
+      });
+
+      container.addEventListener("dragover", (e) => {
+        const dz = e.target.closest(".dropzone");
+        if (!dz) return;
+        e.preventDefault();
+        dz.classList.add("is-dragover");
+      });
+      container.addEventListener("dragleave", (e) => {
+        const dz = e.target.closest(".dropzone");
+        if (dz) dz.classList.remove("is-dragover");
+      });
+      container.addEventListener("drop", (e) => {
+        const dz = e.target.closest(".dropzone");
+        if (!dz) return;
+        e.preventDefault();
+        dz.classList.remove("is-dragover");
+        const file = e.dataTransfer?.files?.[0];
+        if (file) handleBlobCloud(file, { sedeId: dz.getAttribute("data-sede"), itemId: dz.getAttribute("data-item") });
+      });
+    }
+
+    document.addEventListener("input", (e) => {
+      const t = e.target;
+      const meta = t.getAttribute && t.getAttribute("data-meta");
+      if (meta) { state.meta[meta] = t.value; debouncedSave(); return; }
+
+      const field = t.getAttribute && t.getAttribute("data-field");
+      if (!field) return;
+      const sedeId = t.getAttribute("data-sede");
+      const itemId = t.getAttribute("data-item");
+
+      if (field === "sede-nombre") {
+        const s = findSede(sedeId); if (s) s.nombre = t.value;
+      } else if (field === "item-nombre") {
+        const it = findItem(sedeId, itemId); if (it) it.nombre = t.value;
+      } else if (field === "item-desc") {
+        const it = findItem(sedeId, itemId); if (it) it.descripcion = t.value;
+      }
+      debouncedSave();
+    });
+
+    document.addEventListener("paste", (e) => {
+      if (!activeDropzone) return;
+      const items = (e.clipboardData || window.clipboardData)?.items;
+      if (!items) return;
+      for (const it of items) {
+        if (it.type && it.type.indexOf("image") === 0) {
+          const blob = it.getAsFile();
+          if (blob) { handleBlobCloud(blob, activeDropzone); e.preventDefault(); }
+          return;
+        }
+      }
+      setStatus("El portapapeles no contiene una imagen.", true);
+    });
+
+    function addSede() {
+      const s = makeSede("");
+      state.sedes.push(s);
+      render(); saveToCloud();
+      const inp = document.querySelector(`input[data-field="sede-nombre"][data-sede="${s.id}"]`);
+      if (inp) { inp.focus(); inp.scrollIntoView({ behavior: "smooth", block: "center" }); }
+    }
+    $("#btn-add-sede").addEventListener("click", addSede);
+    
+    $("#btn-reset").addEventListener("click", () => {
+      if (confirm("¿Estás seguro de que deseas borrar los reportes actuales y reiniciar la plantilla nacional de 22 sedes?")) {
+        state = makeDefaultState();
+        activeDropzone = null;
+        render(); saveToCloud();
+      }
+    });
+
+    $("#btn-generate").addEventListener("click", generarDocx);
+    $("#btn-generate-2").addEventListener("click", generarDocx);
+
+    // ================= TRADUCCIÓN BINARIA E IMÁGENES =================
+    async function getImageBytes(urlOrDataUrl) {
+      const res = await fetch(urlOrDataUrl);
+      const blob = await res.blob();
+      const buffer = await blob.arrayBuffer();
+      return new Uint8Array(buffer);
+    }
+
+    // ================= GENERACIÓN DEL .DOCX (ASÍNCRONO) =================
+    async function generarDocx() {
+      if (typeof window.docx === "undefined") {
+        setStatus("La librería de Word no cargó. Revisa tu conexión de red.", true);
+        return;
+      }
+      if (state.sedes.length === 0) { setStatus("Agrega al menos una sede antes de generar.", true); return; }
+
+      const D = window.docx;
+      const { Document, Packer, Paragraph, TextRun, ImageRun, HeadingLevel, AlignmentType, PageNumber, Header, Footer } = D;
+
+      const FONT = "Aptos";
+      const faltantes = [];
+      let figN = 0;
+
+      const children = [];
+
+      // Portada / título
+      children.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 120 },
+        children: [new TextRun({ text: "REPORTE CONSOLIDADO DE PROTOCOLO DE PRUEBAS (ATP)", bold: true, size: 32, font: FONT })]
+      }));
+
+      const metaLine = (label, val) => new Paragraph({
+        alignment: AlignmentType.CENTER, spacing: { after: 40 },
+        children: [
+          new TextRun({ text: label + ": ", bold: true, size: 20, font: FONT, color: "334155" }),
+          new TextRun({ text: (val || "—"), size: 20, font: FONT, color: "334155" })
+        ]
+      });
+      children.push(metaLine("Proyecto", state.meta.proyecto));
+      children.push(metaLine("Cliente", state.meta.cliente));
+      children.push(metaLine("Elaborado por", state.meta.autor));
+      children.push(metaLine("Fecha", state.meta.fecha));
+      children.push(new Paragraph({ text: "", spacing: { after: 160 } }));
+
+      setStatus("Descargando imágenes y construyendo documento de Word...");
+
+      for (let si = 0; si < state.sedes.length; si++) {
+        const sede = state.sedes[si];
+        const nombre = (sede.nombre || `SEDE ${si + 1}`).toUpperCase();
+
+        children.push(new Paragraph({
+          heading: HeadingLevel.HEADING_1,
+          pageBreakBefore: si > 0,
+          spacing: { before: si > 0 ? 0 : 120, after: 120 },
+          children: [new TextRun({ text: nombre, bold: true, size: 28, font: FONT, color: "1D4ED8" })]
+        }));
+
+        for (const item of sede.items) {
+          const tituloItem = item.nombre || "Prueba";
+          children.push(new Paragraph({
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 120, after: 60 },
+            children: [new TextRun({ text: tituloItem, bold: true, size: 24, font: FONT, color: "0F172A" })]
+          }));
+
+          if (item.img && item.img.dataUrl) {
+            figN++;
+            let h = Math.round(TARGET_WIDTH_PX * (item.img.h / item.img.w));
+            if (!isFinite(h) || h <= 0) h = TARGET_WIDTH_PX;
+
+            try {
+              const imgBytes = await getImageBytes(item.img.dataUrl);
+
+              children.push(new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 40, after: 20 },
+                children: [new ImageRun({
+                  data: imgBytes,
+                  transformation: { width: TARGET_WIDTH_PX, height: h }
+                })]
+              }));
+
+              const caption = `Figura ${figN}: ${item.descripcion || tituloItem} — ${nombre}`;
+              children.push(new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 160 },
+                children: [new TextRun({ text: caption, italics: true, size: 18, font: FONT, color: "475569" })]
+              }));
+            } catch (errImg) {
+              console.error(errImg);
+              children.push(new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 40, after: 160 },
+                shading: { type: "clear", fill: "FEE2E2" },
+                children: [new TextRun({
+                  text: `[ERROR al procesar imagen de Supabase para ${nombre}]`,
+                  bold: true, color: "DC2626", size: 20, font: FONT
+                })]
+              }));
+            }
+          } else {
+            faltantes.push(`${tituloItem} — ${nombre}`);
+            children.push(new Paragraph({
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 40, after: 160 },
+              shading: { type: "clear", fill: "FEE2E2" },
+              children: [new TextRun({
+                text: `[ALERTA: Evidencia no cargada para esta prueba - ${nombre}]`,
+                bold: true, color: "DC2626", size: 20, font: FONT
+              })]
+            }));
+          }
+        }
+      }
+
+      const doc = new Document({
+        creator: state.meta.autor || "Colector ATP Cloud",
+        title: "Reporte ATP",
+        styles: { default: { document: { run: { font: FONT, size: 22 } } } },
+        sections: [{
+          properties: {
+            page: {
+              size: { width: 11906, height: 16838 }, // A4
+              margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } // 2 cm
+            }
+          },
+          headers: {
+            default: new Header({
+              children: [new Paragraph({
+                alignment: AlignmentType.RIGHT,
+                children: [new TextRun({ text: (state.meta.proyecto || "Reporte ATP"), size: 16, color: "94A3B8", font: FONT })]
+              })]
+            })
+          },
+          footers: {
+            default: new Footer({
+              children: [new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [new TextRun({ children: ["Página ", PageNumber.CURRENT, " de ", PageNumber.TOTAL_PAGES], size: 16, color: "94A3B8", font: FONT })]
+              })]
+            })
+          },
+          children
+        }]
+      });
+
+      if (faltantes.length > 0) {
+        const seguir = confirm(
+          `Se generará el reporte con ${faltantes.length} evidencia(s) FALTANTE(s), marcadas en rojo en el Word:\n\n` +
+          faltantes.slice(0, 12).map(f => "• " + f).join("\n") +
+          (faltantes.length > 12 ? `\n… y ${faltantes.length - 12} más` : "") +
+          "\n\n¿Deseas continuar?"
+        );
+        if (!seguir) { setStatus("Base de datos en línea ✓"); return; }
+      }
+
+      Packer.toBlob(doc).then(blob => {
+        const proj = (state.meta.proyecto || "ATP").replace(/[^\w\-]+/g, "_").slice(0, 40);
+        const fecha = (state.meta.fecha || new Date().toISOString().slice(0, 10));
+        downloadBlob(blob, `Reporte_${proj}_${fecha}.docx`);
+        setStatus(`Reporte generado ✓ (${figN} evidencia(s), ${faltantes.length} faltante(s))`);
+      }).catch(err => {
+        console.error(err);
+        setStatus("Error al generar el .docx: " + (err && err.message ? err.message : err), true);
+      });
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+  })();
+  </script>
+</body>
+</html>
