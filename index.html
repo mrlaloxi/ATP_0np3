@@ -4,13 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Colector de Evidencias ATP — Reporte de Protocolo de Pruebas</title>
-
   <script src="https://cdn.tailwindcss.com"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <script>
     tailwind.config = {
       theme: {
@@ -27,11 +23,9 @@
       }
     }
   </script>
-
   <style>
     :root { color-scheme: light; }
     body { -webkit-font-smoothing: antialiased; }
-
     /* Dropzone: estados visuales para pegar (Ctrl+V) */
     .dropzone {
       border: 2px dashed #CBD5E1;
@@ -51,17 +45,13 @@
       box-shadow: 0 0 0 3px rgba(5, 150, 105, .18);
     }
     .dropzone.has-image { border-style: solid; border-color: #E2E8F0; cursor: default; }
-
     /* Barra de completitud */
     .meter-track { background: #E2E8F0; border-radius: 999px; overflow: hidden; }
     .meter-fill { height: 100%; transition: width .3s ease, background-color .3s ease; }
-
     @media print { .no-print { display: none !important; } }
   </style>
 </head>
-
 <body class="bg-slate-50 text-ink min-h-screen">
-
   <div id="login-container" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 hidden">
     <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl p-6 w-full max-w-md space-y-4">
       <div class="text-center">
@@ -85,7 +75,6 @@
       <p id="login-error" class="text-center text-xs text-red-600 font-medium min-h-[1rem]"></p>
     </div>
   </div>
-
   <header class="no-print sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
     <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 flex-wrap">
       <div class="flex items-center gap-3">
@@ -98,9 +87,7 @@
           <p class="text-xs text-slate-500 leading-tight">Acceptance Test Procedure · Reporte consolidado en Supabase</p>
         </div>
       </div>
-
       <div class="flex-1"></div>
-
       <div class="w-full sm:w-64">
         <div class="flex items-center justify-between text-xs mb-1">
           <span class="font-medium text-slate-600">Total nacional de evidencias</span>
@@ -110,7 +97,6 @@
           <div id="global-meter" class="meter-fill w-0 bg-emerald-500"></div>
         </div>
       </div>
-
       <div class="flex items-center gap-2">
         <button id="btn-reset" class="px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">Reiniciar Plantilla</button>
         <button id="btn-logout" class="px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 transition">Salir</button>
@@ -120,7 +106,6 @@
       </div>
     </div>
   </header>
-
   <main class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
     
     <aside class="no-print w-full lg:w-72 shrink-0 lg:sticky lg:top-20 h-[calc(100vh-120px)] overflow-y-auto bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
@@ -134,7 +119,6 @@
       
       <div id="dashboard-list" class="flex-1 space-y-1.5 overflow-y-auto pr-1"></div>
     </aside>
-
     <div class="flex-1 space-y-6">
       
       <section class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
@@ -162,14 +146,11 @@
           </label>
         </div>
       </section>
-
       <div class="no-print flex items-start gap-2 text-xs text-slate-500 bg-white border border-slate-200 rounded-lg px-4 py-2">
         <span class="mt-0.5">💡</span>
         <p>¡Hola! Selecciona tu sede en el monitor de la izquierda. Selecciona un cuadro y pega tu evidencia con <span class="font-mono font-semibold text-slate-700">Ctrl+V</span>, o súbela directo desde tu celular usando el botón "Subir / Cámara".</p>
       </div>
-
       <div id="sedes-container" class="space-y-6"></div>
-
       <div class="flex flex-col sm:flex-row gap-3">
         <button id="btn-add-sede" class="flex-1 px-4 py-3 rounded-xl border-2 border-dashed border-signal/40 text-signalDark font-semibold hover:bg-blue-50 transition">
           + Agregar Nueva Sede Personalizada
@@ -178,29 +159,22 @@
           Descargar Reporte Word (.docx)
         </button>
       </div>
-
       <p id="status-line" class="text-center text-sm text-slate-500 h-5 font-medium"></p>
     </div>
   </main>
-
   <footer class="no-print max-w-[1400px] mx-auto px-6 pb-10 pt-2 text-center text-xs text-slate-400">
     Herramienta de Consolidación · Sincronizada en vivo mediante Supabase
   </footer>
-
   <script>
   (function () {
     "use strict";
-
     // ---------- Configuración de Supabase ----------
     const supabaseUrl = "https://ocswemmnxsospjhwyaiv.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jc3dlbW1ueHNvc3BqaHd5YWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNjU2MDYsImV4cCI6MjA5OTc0MTYwNn0.qgjDuq5XZbqszHI0cMMOCSpW0_ep8RtkMx3xgIgGrVk";
-
     // Inicializar cliente de Supabase
     const sb = supabase.createClient(supabaseUrl, supabaseKey);
-
     // Identificador único de esta pestaña para evitar bucles de sobreescritura (Race Conditions)
     const tabId = Math.random().toString(36).substring(7);
-
     // ---------- Estructura del ATP Nacional ----------
     const SEDES_PREDEFINIDAS = [
       "LURIN", "INDUSTRIAL", "ABANCAY", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
@@ -208,7 +182,6 @@
       "ICA", "IQUITOS", "LIMA", "PIURA", "PUCALLPA", "PUNO", "TACNA",
       "TARAPOTO", "TRUJILLO", "HUANCAVELICA"
     ];
-
     const ITEMS_PREDEFINIDOS = [
       "Conectividad a la sede cabecera",
       "Conectividad a internet",
@@ -220,32 +193,35 @@
       "Caída de main",
       "Prueba de Tracert"
     ];
-
     const CM_TO_PX = 37.795275591; // 96 dpi
     const TARGET_WIDTH_PX = Math.round(14 * CM_TO_PX); // 14 cm ≈ 529 px
-
     // ---------- Utilidades de Selección DOM ----------
     const $ = (sel, ctx = document) => ctx.querySelector(sel);
     const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
     // OBTENER CONTENEDOR GLOBAL DE SEDES (Declarado arriba de forma segura)
     const container = $("#sedes-container");
-
     // ---------- Estado de la Aplicación ----------
     let uid = 1;
     const nid = () => "id" + (uid++);
-
     let state = {
       meta: { proyecto: "", cliente: "", autor: "", fecha: new Date().toISOString().slice(0, 10) },
       sedes: []
     };
-
     let activeDropzone = null; // { sedeId, itemId }
     let isWriting = false;     // Evita loops infinitos de actualización
     let pendingState = null;   // Almacena actualizaciones mientras el usuario escribe
-
     function makeItem(nombre) {
       return { id: nid(), nombre, descripcion: nombre, img: null };
+    }
+    // Crea una sede nueva con la batería de pruebas predefinida (faltaba definir esta función)
+    function makeSede(nombre) {
+      return {
+        id: nid(),
+        nombre: nombre || "",
+        items: ITEMS_PREDEFINIDOS.map(testName => ({
+          id: nid(), nombre: testName, descripcion: testName, img: null
+        }))
+      };
     }
     
     // Función para crear la plantilla inicial completa
@@ -268,13 +244,11 @@
         sedes: defaultSedes
       };
     }
-
     function findSede(id) { return state.sedes.find(s => s.id === id); }
     function findItem(sedeId, itemId) {
       const s = findSede(sedeId);
       return s ? s.items.find(i => i.id === itemId) : null;
     }
-
     // ---------- Autenticación Supabase ----------
     sb.auth.onAuthStateChange((event, session) => {
       const loginCard = $("#login-container");
@@ -286,13 +260,11 @@
         if (container) container.innerHTML = "";
       }
     });
-
     $("#btn-login").addEventListener("click", async () => {
       const email = $("#login-email").value;
       const pass = $("#login-pass").value;
       const errEl = $("#login-error");
       errEl.textContent = "";
-
       if (!email || !pass) { errEl.textContent = "Por favor completa todos los campos."; return; }
       setStatus("Iniciando sesión...");
       
@@ -304,13 +276,11 @@
         setStatus("Sesión iniciada ✓");
       }
     });
-
     $("#btn-logout").addEventListener("click", async () => {
       if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
         await sb.auth.signOut();
       }
     });
-
     // ---------- Sincronización en la nube (Postgres + Realtime) ----------
     async function saveToCloud() {
       const { data: { session } } = await sb.auth.getSession();
@@ -335,7 +305,6 @@
       }
       isWriting = false;
     }
-
     let saveTimeout;
     function debouncedSave() {
       clearTimeout(saveTimeout);
@@ -343,7 +312,6 @@
         saveToCloud();
       }, 700);
     }
-
     async function initSync() {
       setStatus("Conectando base de datos...");
       
@@ -354,9 +322,7 @@
           .select("data")
           .eq("id", "consolidado_atp")
           .maybeSingle();
-
         if (error) throw error;
-
         if (data && data.data) {
           const cloudData = data.data;
           
@@ -365,7 +331,6 @@
           const scan = (id) => { const n = parseInt(String(id).replace("id", ""), 10); if (!isNaN(n) && n > max) max = n; };
           cloudData.sedes.forEach(s => { scan(s.id); s.items.forEach(i => scan(i.id)); });
           uid = max + 1;
-
           // ================= MIGRACIÓN INTELIGENTE EN CALIENTE =================
           let huboMigracion = false;
           cloudData.sedes.forEach(sede => {
@@ -382,7 +347,6 @@
               }
             });
           });
-
           const isTyping = document.activeElement && 
                            (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
           
@@ -407,7 +371,6 @@
         console.error(e);
         setStatus("Error al cargar la base de datos.", true);
       }
-
       // 2. Escuchar cambios en tiempo real en la tabla de Supabase
       sb.channel('reports_channel')
         .on(
@@ -417,11 +380,9 @@
             if (isWriting) return;
             const cloudData = payload.new.data;
             if (!cloudData) return;
-
             if (cloudData.last_changed_by === tabId) {
               return;
             }
-
             const isTyping = document.activeElement && 
                              (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
             
@@ -435,7 +396,6 @@
         )
         .subscribe();
     }
-
     document.addEventListener("focusout", () => {
       if (pendingState) {
         state = pendingState;
@@ -443,28 +403,21 @@
         render();
       }
     });
-
     // ---------- Subida de imágenes a Supabase Storage ----------
     async function handleBlobCloud(blob, target) {
       if (!blob || !/^image\//.test(blob.type)) return;
       setStatus("Subiendo imagen a la nube... (esto puede demorar un poco)");
-
       const ext = blob.type.split("/")[1] || "png";
       const filename = `${target.sedeId}_${target.itemId}_${Date.now()}.${ext}`;
-
       try {
         const { data, error } = await sb.storage
           .from("evidencias")
           .upload(filename, blob, { contentType: blob.type, upsert: true });
-
         if (error) throw error;
-
         const { data: urlData } = sb.storage
           .from("evidencias")
           .getPublicUrl(filename);
-
         const downloadUrl = urlData.publicUrl;
-
         const im = new Image();
         im.onload = async () => {
           const item = findItem(target.sedeId, target.itemId);
@@ -480,7 +433,6 @@
         setStatus("Error al subir imagen. Verifica el Storage.", true);
       }
     }
-
     // ---------- Render e Integridad en vivo ----------
     function render() {
       if (state.sedes.length === 0) {
@@ -491,21 +443,17 @@
       } else {
         container.innerHTML = state.sedes.map((sede, si) => sedeHTML(sede, si)).join("");
       }
-
       document.querySelectorAll("[data-meta]").forEach(inp => {
         inp.value = state.meta[inp.getAttribute("data-meta")] || "";
       });
-
       restoreActive();
       updateMeters();
       renderDashboard(); // Actualizar el dashboard lateral en cada cambio
     }
-
     // Dibuja la lista lateral del Dashboard con navegación por scroll
     function renderDashboard() {
       const dash = $("#dashboard-list");
       if (!dash) return;
-
       dash.innerHTML = state.sedes.map(sede => {
         const total = sede.items.length;
         const cargadas = sede.items.filter(i => i.img).length;
@@ -516,7 +464,6 @@
         } else if (cargadas > 0) {
           colorClass = "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100";
         }
-
         return `
           <button onclick="document.getElementById('${sede.id}').scrollIntoView({ behavior: 'smooth', block: 'center' })"
                   class="w-full flex items-center justify-between text-left p-2 rounded-lg border text-[11px] font-bold transition ${colorClass}">
@@ -526,14 +473,12 @@
         `;
       }).join("");
     }
-
     function sedeHTML(sede, si) {
       const cargadas = sede.items.filter(i => i.img).length;
       const total = sede.items.length;
       const pct = total ? Math.round((cargadas / total) * 100) : 0;
       const complete = cargadas === total && total > 0;
       const barColor = complete ? "bg-emerald-500" : (cargadas === 0 ? "bg-slate-400" : "bg-amber-500");
-
       return `
       <section class="bg-white rounded-xl border border-slate-200 overflow-hidden scroll-mt-24" id="${sede.id}" data-sede-card="${sede.id}">
         <div class="flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-slate-100 bg-slate-50/60">
@@ -552,22 +497,18 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
           </button>
         </div>
-
         <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           ${sede.items.map(item => itemHTML(sede, item)).join("")}
         </div>
-
         <div class="px-4 sm:px-5 pb-4">
           <button data-action="add-item" data-sede="${sede.id}"
                   class="text-sm text-signalDark font-medium hover:underline">+ Agregar ítem personalizado para esta sede</button>
         </div>
       </section>`;
     }
-
     function itemHTML(sede, item) {
       const dzAttrs = `data-role="dropzone" data-sede="${sede.id}" data-item="${item.id}" tabindex="0"`;
       let inner;
-
       if (item.img) {
         inner = `
           <div class="relative">
@@ -589,7 +530,6 @@
             <p class="text-[11px] text-slate-400">o arrastra una imagen aquí</p>
           </div>`;
       }
-
       return `
         <div class="rounded-xl border border-slate-200 p-3 flex flex-col gap-2 bg-white">
           <div class="flex items-center gap-2">
@@ -598,15 +538,12 @@
             <button data-action="remove-item" data-sede="${sede.id}" data-item="${item.id}" title="Eliminar ítem"
                     class="text-slate-300 hover:text-red-600 rounded p-1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
           </div>
-
           ${inner}
-
           <div class="flex items-center gap-2 -mt-0.5">
             <button data-action="pick-file" data-sede="${sede.id}" data-item="${item.id}"
                     class="text-[11px] font-medium text-signalDark hover:underline">📎 Subir / Cámara</button>
             <input type="file" accept="image/*" data-file-input data-sede="${sede.id}" data-item="${item.id}" class="hidden" />
           </div>
-
           <label class="block">
             <span class="text-[11px] text-slate-400">Descripción de la prueba</span>
             <input data-field="item-desc" data-sede="${sede.id}" data-item="${item.id}" value="${esc(item.descripcion)}"
@@ -614,7 +551,6 @@
           </label>
         </div>`;
     }
-
     function updateMeters() {
       let total = 0, cargadas = 0;
       state.sedes.forEach(s => s.items.forEach(i => { total++; if (i.img) cargadas++; }));
@@ -627,7 +563,6 @@
       const countEl = $("#global-count");
       if (countEl) countEl.textContent = `${cargadas} / ${total}`;
     }
-
     function setActive(sedeId, itemId) {
       activeDropzone = { sedeId, itemId };
       document.querySelectorAll(".dropzone").forEach(dz => {
@@ -641,7 +576,6 @@
       if (dz) dz.classList.add("is-active");
       else activeDropzone = null;
     }
-
     function setStatus(msg, isError) {
       const el = $("#status-line");
       if (el) {
@@ -649,9 +583,7 @@
         el.className = "text-center text-sm h-5 " + (isError ? "text-red-600 animate-bounce" : "text-emerald-600");
       }
     }
-
     // ================= DELEGACIÓN DE EVENTOS =================
-
     document.addEventListener("click", (e) => {
       const dz = e.target.closest(".dropzone");
       if (dz && !e.target.closest("[data-action]")) {
@@ -664,7 +596,6 @@
       const action = btn.getAttribute("data-action");
       const sedeId = btn.getAttribute("data-sede");
       const itemId = btn.getAttribute("data-item");
-
       if (action === "remove-sede") {
         const s = findSede(sedeId);
         if (s && confirm(`¿Eliminar "${s.nombre || "sede sin nombre"}" y todas sus evidencias?`)) {
@@ -690,7 +621,6 @@
         if (input) input.click();
       }
     });
-
     if (container) {
       container.addEventListener("change", (e) => {
         const inp = e.target.closest("input[data-file-input]");
@@ -698,7 +628,6 @@
         handleBlobCloud(inp.files[0], { sedeId: inp.getAttribute("data-sede"), itemId: inp.getAttribute("data-item") });
         inp.value = "";
       });
-
       container.addEventListener("dragover", (e) => {
         const dz = e.target.closest(".dropzone");
         if (!dz) return;
@@ -718,17 +647,14 @@
         if (file) handleBlobCloud(file, { sedeId: dz.getAttribute("data-sede"), itemId: dz.getAttribute("data-item") });
       });
     }
-
     document.addEventListener("input", (e) => {
       const t = e.target;
       const meta = t.getAttribute && t.getAttribute("data-meta");
       if (meta) { state.meta[meta] = t.value; debouncedSave(); return; }
-
       const field = t.getAttribute && t.getAttribute("data-field");
       if (!field) return;
       const sedeId = t.getAttribute("data-sede");
       const itemId = t.getAttribute("data-item");
-
       if (field === "sede-nombre") {
         const s = findSede(sedeId); if (s) s.nombre = t.value;
       } else if (field === "item-nombre") {
@@ -738,7 +664,6 @@
       }
       debouncedSave();
     });
-
     document.addEventListener("paste", (e) => {
       if (!activeDropzone) return;
       const items = (e.clipboardData || window.clipboardData)?.items;
@@ -752,7 +677,6 @@
       }
       setStatus("El portapapeles no contiene una imagen.", true);
     });
-
     function addSede() {
       const s = makeSede("");
       state.sedes.push(s);
@@ -769,10 +693,8 @@
         render(); saveToCloud();
       }
     });
-
     $("#btn-generate").addEventListener("click", generarDocx);
     $("#btn-generate-2").addEventListener("click", generarDocx);
-
     // ================= TRADUCCIÓN BINARIA E IMÁGENES =================
     async function getImageBytes(urlOrDataUrl) {
       const res = await fetch(urlOrDataUrl);
@@ -780,7 +702,6 @@
       const buffer = await blob.arrayBuffer();
       return new Uint8Array(buffer);
     }
-
     // ================= GENERACIÓN DEL .DOCX (ASÍNCRONO) =================
     async function generarDocx() {
       if (typeof window.docx === "undefined") {
@@ -788,23 +709,18 @@
         return;
       }
       if (state.sedes.length === 0) { setStatus("Agrega al menos una sede antes de generar.", true); return; }
-
       const D = window.docx;
-      const { Document, Packer, Paragraph, TextRun, ImageRun, HeadingLevel, AlignmentType, PageNumber, Header, Footer } = D;
-
+      const { Document, Packer, Paragraph, TextRun, ImageRun, HeadingLevel, AlignmentType, PageNumber, Footer, SequentialIdentifier } = D;
       const FONT = "Aptos";
       const faltantes = [];
       let figN = 0;
-
       const children = [];
-
       // Portada / título
       children.push(new Paragraph({
         alignment: AlignmentType.CENTER,
         spacing: { after: 120 },
         children: [new TextRun({ text: "REPORTE CONSOLIDADO DE PROTOCOLO DE PRUEBAS (ATP)", bold: true, size: 32, font: FONT })]
       }));
-
       const metaLine = (label, val) => new Paragraph({
         alignment: AlignmentType.CENTER, spacing: { after: 40 },
         children: [
@@ -817,20 +733,16 @@
       children.push(metaLine("Elaborado por", state.meta.autor));
       children.push(metaLine("Fecha", state.meta.fecha));
       children.push(new Paragraph({ text: "", spacing: { after: 160 } }));
-
       setStatus("Descargando imágenes y construyendo documento de Word...");
-
       for (let si = 0; si < state.sedes.length; si++) {
         const sede = state.sedes[si];
         const nombre = (sede.nombre || `SEDE ${si + 1}`).toUpperCase();
-
         children.push(new Paragraph({
           heading: HeadingLevel.HEADING_1,
           pageBreakBefore: si > 0,
           spacing: { before: si > 0 ? 0 : 120, after: 120 },
           children: [new TextRun({ text: nombre, bold: true, size: 28, font: FONT, color: "1D4ED8" })]
         }));
-
         for (const item of sede.items) {
           const tituloItem = item.nombre || "Prueba";
           children.push(new Paragraph({
@@ -838,15 +750,12 @@
             spacing: { before: 120, after: 60 },
             children: [new TextRun({ text: tituloItem, bold: true, size: 24, font: FONT, color: "0F172A" })]
           }));
-
           if (item.img && item.img.dataUrl) {
             figN++;
             let h = Math.round(TARGET_WIDTH_PX * (item.img.h / item.img.w));
             if (!isFinite(h) || h <= 0) h = TARGET_WIDTH_PX;
-
             try {
               const imgBytes = await getImageBytes(item.img.dataUrl);
-
               children.push(new Paragraph({
                 alignment: AlignmentType.CENTER,
                 spacing: { before: 40, after: 20 },
@@ -855,12 +764,16 @@
                   transformation: { width: TARGET_WIDTH_PX, height: h }
                 })]
               }));
-
-              const caption = `Figura ${figN}: ${item.descripcion || tituloItem} — ${nombre}`;
+              // Título de imagen REAL de Word: "Imagen {campo SEQ}. Descripción — SEDE"
+              // El número es un campo automático (SequentialIdentifier), por eso se renumera
+              // solo al anexarlo a otro informe (F9) y se puede usar en referencias cruzadas.
               children.push(new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 160 },
-                children: [new TextRun({ text: caption, italics: true, size: 18, font: FONT, color: "475569" })]
+                style: "Caption",
+                children: [
+                  new TextRun("Imagen "),
+                  new SequentialIdentifier("Imagen"),
+                  new TextRun(`. ${item.descripcion || tituloItem} — ${nombre}`)
+                ]
               }));
             } catch (errImg) {
               console.error(errImg);
@@ -888,11 +801,23 @@
           }
         }
       }
-
       const doc = new Document({
         creator: state.meta.autor || "Colector ATP Cloud",
         title: "Reporte ATP",
-        styles: { default: { document: { run: { font: FONT, size: 22 } } } },
+        styles: {
+          default: { document: { run: { font: FONT, size: 22 } } },
+          // Estilo "Caption" nativo => Word lo reconoce como título de imagen
+          // (aparece en Tabla de ilustraciones y en Insertar > Referencia cruzada).
+          paragraphStyles: [{
+            id: "Caption",
+            name: "Caption",
+            basedOn: "Normal",
+            next: "Normal",
+            quickFormat: true,
+            run: { italics: true, size: 18, color: "475569", font: FONT },
+            paragraph: { alignment: AlignmentType.CENTER, spacing: { after: 160 } }
+          }]
+        },
         sections: [{
           properties: {
             page: {
@@ -900,14 +825,7 @@
               margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } // 2 cm
             }
           },
-          headers: {
-            default: new Header({
-              children: [new Paragraph({
-                alignment: AlignmentType.RIGHT,
-                children: [new TextRun({ text: (state.meta.proyecto || "Reporte ATP"), size: 16, color: "94A3B8", font: FONT })]
-              })]
-            })
-          },
+          // (Se quitó el encabezado "Reporte ATP" para que sea amigable al anexar a otro informe.)
           footers: {
             default: new Footer({
               children: [new Paragraph({
@@ -919,7 +837,6 @@
           children
         }]
       });
-
       if (faltantes.length > 0) {
         const seguir = confirm(
           `Se generará el reporte con ${faltantes.length} evidencia(s) FALTANTE(s), marcadas en rojo en el Word:\n\n` +
@@ -929,7 +846,6 @@
         );
         if (!seguir) { setStatus("Base de datos en línea ✓"); return; }
       }
-
       Packer.toBlob(doc).then(blob => {
         const proj = (state.meta.proyecto || "ATP").replace(/[^\w\-]+/g, "_").slice(0, 40);
         const fecha = (state.meta.fecha || new Date().toISOString().slice(0, 10));
@@ -940,7 +856,6 @@
         setStatus("Error al generar el .docx: " + (err && err.message ? err.message : err), true);
       });
     }
-
     function downloadBlob(blob, filename) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
