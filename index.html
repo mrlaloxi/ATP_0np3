@@ -273,16 +273,25 @@
     });
 
     // ---------- Sincronización en la nube (Postgres + Realtime) ----------
-    async function saveToCloud() {
-      const session = (await sb.auth.getSession()).data.session;
-      if (!session) return;
+async function saveToCloud() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        setStatus("Error: No hay una sesión de usuario activa.", true);
+        return;
+      }
       
       isWriting = true;
       try {
-        await sb.from("reports").upsert({ id: "consolidado_atp", data: state });
+        const { error } = await sb.from("reports").upsert({ id: "consolidado_atp", data: state });
+        if (error) {
+          console.error("Error de Supabase:", error);
+          setStatus("Error al sincronizar: " + error.message, true);
+        } else {
+          setStatus("Base de datos en línea ✓");
+        }
       } catch (e) {
-        console.error(e);
-        setStatus("Error al sincronizar con la nube.", true);
+        console.error("Error en try-catch:", e);
+        setStatus("Error crítico al guardar en la nube.", true);
       }
       isWriting = false;
     }
