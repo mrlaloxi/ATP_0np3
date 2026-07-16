@@ -79,9 +79,9 @@
           <input id="login-pass" type="password" placeholder="••••••••" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-signal" />
         </label>
       </div>
-        <div class="flex gap-2 pt-2">
-          <button id="btn-login" class="w-full py-2.5 text-sm font-semibold rounded-lg bg-signal hover:bg-signalDark text-white shadow-sm transition">Ingresar</button>
-        </div>
+      <div class="flex gap-2 pt-2">
+        <button id="btn-login" class="w-full py-2.5 text-sm font-semibold rounded-lg bg-signal hover:bg-signalDark text-white shadow-sm transition">Ingresar</button>
+      </div>
       <p id="login-error" class="text-center text-xs text-red-600 font-medium min-h-[1rem]"></p>
     </div>
   </div>
@@ -183,6 +183,9 @@
     // Inicializar cliente de Supabase
     const sb = supabase.createClient(supabaseUrl, supabaseKey);
 
+    // Identificador único de esta pestaña para evitar bucles de sobreescritura (Race Conditions)
+    const tabId = Math.random().toString(36).substring(7);
+
     // ---------- Constantes del Sistema ----------
     const ITEMS_DEFAULT = ["Validación de servicio", "Prueba de Ping", "Prueba de Ancho de Banda"];
     const CM_TO_PX = 37.795275591; // 96 dpi
@@ -248,24 +251,6 @@
       }
     });
 
-    $("#btn-signup").addEventListener("click", async () => {
-      const email = $("#login-email").value;
-      const pass = $("#login-pass").value;
-      const errEl = $("#login-error");
-      errEl.textContent = "";
-
-      if (!email || !pass) { errEl.textContent = "Por favor completa todos los campos."; return; }
-      setStatus("Creando cuenta...");
-
-      const { error } = await sb.auth.signUp({ email, password: pass });
-      if (error) {
-        setStatus("", false);
-        errEl.textContent = "Error al registrar: " + error.message;
-      } else {
-        setStatus("Cuenta creada con éxito. Revisa tu correo o intenta ingresar ✓");
-      }
-    });
-
     $("#btn-logout").addEventListener("click", async () => {
       if (confirm("¿Estás seguro de que deseas cerrar sesión?")) {
         await sb.auth.signOut();
@@ -273,7 +258,7 @@
     });
 
     // ---------- Sincronización en la nube (Postgres + Realtime) ----------
-async function saveToCloud() {
+    async function saveToCloud() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) {
         setStatus("Error: No hay una sesión de usuario activa.", true);
@@ -282,6 +267,9 @@ async function saveToCloud() {
       
       isWriting = true;
       try {
+        // Marcamos el estado con nuestro identificador de pestaña antes de guardar
+        state.last_changed_by = tabId;
+
         const { error } = await sb.from("reports").upsert({ id: "consolidado_atp", data: state });
         if (error) {
           console.error("Error de Supabase:", error);
@@ -355,6 +343,14 @@ async function saveToCloud() {
           (payload) => {
             if (isWriting) return;
             const cloudData = payload.new.data;
+            if (!cloudData) return;
+
+            // ¡CRÍTICO! Si el cambio lo hicimos nosotros mismos desde esta pestaña, lo ignoramos.
+            // Esto evita que notificaciones atrasadas de guardados automáticos destruyan nuestro trabajo actual.
+            if (cloudData.last_changed_by === tabId) {
+              return;
+            }
+
             const isTyping = document.activeElement && 
                              (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
             
@@ -845,7 +841,6 @@ async function saveToCloud() {
       });
     }
 
-    
     function downloadBlob(blob, filename) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
