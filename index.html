@@ -52,7 +52,7 @@
     }
     .dropzone.has-image { border-style: solid; border-color: #E2E8F0; cursor: default; }
 
-    /* Barra de completitud (elemento distintivo) */
+    /* Barra de completitud */
     .meter-track { background: #E2E8F0; border-radius: 999px; overflow: hidden; }
     .meter-fill { height: 100%; transition: width .3s ease, background-color .3s ease; }
 
@@ -87,7 +87,7 @@
   </div>
 
   <header class="no-print sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 flex-wrap">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 flex-wrap">
       <div class="flex items-center gap-3">
         <div class="h-9 w-9 rounded-lg bg-signalDark flex items-center justify-center text-white font-bold">ATP</div>
         <div>
@@ -103,7 +103,7 @@
 
       <div class="w-full sm:w-64">
         <div class="flex items-center justify-between text-xs mb-1">
-          <span class="font-medium text-slate-600">Evidencias cargadas</span>
+          <span class="font-medium text-slate-600">Total nacional de evidencias</span>
           <span id="global-count" class="font-mono text-slate-500">0 / 0</span>
         </div>
         <div class="meter-track h-2 w-full">
@@ -112,64 +112,79 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <button id="btn-reset" class="px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">Reiniciar Reporte</button>
+        <button id="btn-reset" class="px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">Reiniciar Plantilla</button>
         <button id="btn-logout" class="px-3 py-2 text-sm rounded-lg border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 transition">Salir</button>
         <button id="btn-generate" class="px-4 py-2 text-sm font-semibold rounded-lg bg-signal hover:bg-signalDark text-white shadow-sm disabled:opacity-50">
-          Generar Reporte
+          Generar Word
         </button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-
-    <section class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
-      <h2 class="text-sm font-semibold text-slate-700 mb-3">Datos del reporte</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <label class="block">
-          <span class="text-xs font-medium text-slate-500">Proyecto</span>
-          <input data-meta="proyecto" type="text" placeholder="Ej: Pronatel EPAD"
-                 class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
-        </label>
-        <label class="block">
-          <span class="text-xs font-medium text-slate-500">Cliente</span>
-          <input data-meta="cliente" type="text" placeholder="Ej: Pronatel"
-                 class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
-        </label>
-        <label class="block">
-          <span class="text-xs font-medium text-slate-500">Elaborado por</span>
-          <input data-meta="autor" type="text" placeholder="Ej: Eduardo Alavedra"
-                 class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
-        </label>
-        <label class="block">
-          <span class="text-xs font-medium text-slate-500">Fecha</span>
-          <input data-meta="fecha" type="date"
-                 class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
-        </label>
+  <main class="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
+    
+    <aside class="no-print w-full lg:w-72 shrink-0 lg:sticky lg:top-20 h-[calc(100vh-120px)] overflow-y-auto bg-white border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
+      <div>
+        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          📊 Monitoreo Nacional 
+          <span class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 px-1.5 py-0.5 rounded font-mono">EN VIVO</span>
+        </h3>
+        <p class="text-[11px] text-slate-400">Haz clic en una sede para ir a sus evidencias</p>
       </div>
-    </section>
+      
+      <div id="dashboard-list" class="flex-1 space-y-1.5 overflow-y-auto pr-1"></div>
+    </aside>
 
-    <div class="no-print flex items-start gap-2 text-xs text-slate-500 bg-white border border-slate-200 rounded-lg px-4 py-2">
-      <span class="mt-0.5">💡</span>
-      <p>¡Sincronización Supabase activada! Los cambios que realices se guardarán al instante en la base de datos de tu equipo. Presiona <span class="font-mono font-semibold text-slate-700">Ctrl+V</span> en un cuadro para pegar evidencias.</p>
+    <div class="flex-1 space-y-6">
+      
+      <section class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3">Datos generales del proyecto</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <label class="block">
+            <span class="text-xs font-medium text-slate-500">Proyecto</span>
+            <input data-meta="proyecto" type="text" placeholder="Ej: Red de Acceso Nacional"
+                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
+          </label>
+          <label class="block">
+            <span class="text-xs font-medium text-slate-500">Cliente</span>
+            <input data-meta="cliente" type="text" placeholder="Ej: ONPE / Claro"
+                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
+          </label>
+          <label class="block">
+            <span class="text-xs font-medium text-slate-500">Elaborado por</span>
+            <input data-meta="autor" type="text" placeholder="Ej: Coordinador ATP"
+                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
+          </label>
+          <label class="block">
+            <span class="text-xs font-medium text-slate-500">Fecha</span>
+            <input data-meta="fecha" type="date"
+                   class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-signal focus:border-signal outline-none" />
+          </label>
+        </div>
+      </section>
+
+      <div class="no-print flex items-start gap-2 text-xs text-slate-500 bg-white border border-slate-200 rounded-lg px-4 py-2">
+        <span class="mt-0.5">💡</span>
+        <p>¡Hola! Selecciona tu sede en el monitor de la izquierda. Selecciona un cuadro y pega tu evidencia con <span class="font-mono font-semibold text-slate-700">Ctrl+V</span>, o súbela directo desde tu celular usando el botón "Subir / Cámara".</p>
+      </div>
+
+      <div id="sedes-container" class="space-y-6"></div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button id="btn-add-sede" class="flex-1 px-4 py-3 rounded-xl border-2 border-dashed border-signal/40 text-signalDark font-semibold hover:bg-blue-50 transition">
+          + Agregar Nueva Sede Personalizada
+        </button>
+        <button id="btn-generate-2" class="flex-1 px-4 py-3 rounded-xl bg-signal hover:bg-signalDark text-white font-semibold shadow-sm">
+          Descargar Reporte Word (.docx)
+        </button>
+      </div>
+
+      <p id="status-line" class="text-center text-sm text-slate-500 h-5 font-medium"></p>
     </div>
-
-    <div id="sedes-container" class="space-y-6"></div>
-
-    <div class="flex flex-col sm:flex-row gap-3">
-      <button id="btn-add-sede" class="flex-1 px-4 py-3 rounded-xl border-2 border-dashed border-signal/40 text-signalDark font-semibold hover:bg-blue-50 transition">
-        + Agregar Nueva Sede
-      </button>
-      <button id="btn-generate-2" class="flex-1 px-4 py-3 rounded-xl bg-signal hover:bg-signalDark text-white font-semibold shadow-sm">
-        Generar Reporte Consolidado (.docx)
-      </button>
-    </div>
-
-    <p id="status-line" class="text-center text-sm text-slate-500 h-5 font-medium"></p>
   </main>
 
-  <footer class="no-print max-w-6xl mx-auto px-6 pb-10 pt-2 text-center text-xs text-slate-400">
-    Herramienta en la nube · Autenticada y Almacenada mediante Supabase
+  <footer class="no-print max-w-[1400px] mx-auto px-6 pb-10 pt-2 text-center text-xs text-slate-400">
+    Herramienta de Consolidación · Sincronizada en vivo mediante Supabase
   </footer>
 
   <script>
@@ -186,8 +201,26 @@
     // Identificador único de esta pestaña para evitar bucles de sobreescritura (Race Conditions)
     const tabId = Math.random().toString(36).substring(7);
 
-    // ---------- Constantes del Sistema ----------
-    const ITEMS_DEFAULT = ["Validación de servicio", "Prueba de Ping", "Prueba de Ancho de Banda"];
+    // ---------- Estructura del ATP Nacional ----------
+    const SEDES_PREDEFINIDAS = [
+      "LURIN", "INDUSTRIAL", "ABANCAY", "AREQUIPA", "AYACUCHO", "CAJAMARCA",
+      "CHACHAPOYAS", "CHICLAYO", "CUSCO", "HUANCAYO", "HUANUCO", "HUARAZ",
+      "ICA", "IQUITOS", "LIMA", "PIURA", "PUCALLPA", "PUNO", "TACNA",
+      "TARAPOTO", "TRUJILLO", "HUANCAVELICA"
+    ];
+
+    const ITEMS_PREDEFINIDOS = [
+      "Conectividad a la sede cabecera",
+      "Conectividad a internet",
+      "Navegación",
+      "Ancho de banda",
+      "Captura de tráfico encriptado por main",
+      "Captura de tráfico encriptado por backup",
+      "Prueba de alta disponibilidad",
+      "Caída de main",
+      "Prueba de Tracert"
+    ];
+
     const CM_TO_PX = 37.795275591; // 96 dpi
     const TARGET_WIDTH_PX = Math.round(14 * CM_TO_PX); // 14 cm ≈ 529 px
 
@@ -211,8 +244,26 @@
     function makeItem(nombre) {
       return { id: nid(), nombre, descripcion: nombre, img: null };
     }
-    function makeSede(nombre) {
-      return { id: nid(), nombre: nombre || "", items: ITEMS_DEFAULT.map(makeItem) };
+    
+    // Función para crear la plantilla inicial completa
+    function makeDefaultState() {
+      const defaultSedes = SEDES_PREDEFINIDAS.map(name => {
+        const sId = nid();
+        return {
+          id: sId,
+          nombre: name,
+          items: ITEMS_PREDEFINIDOS.map(testName => ({
+            id: nid(),
+            nombre: testName,
+            descripcion: testName,
+            img: null
+          }))
+        };
+      });
+      return {
+        meta: { proyecto: "", cliente: "", autor: "", fecha: new Date().toISOString().slice(0, 10) },
+        sedes: defaultSedes
+      };
     }
 
     function findSede(id) { return state.sedes.find(s => s.id === id); }
@@ -267,9 +318,7 @@
       
       isWriting = true;
       try {
-        // Marcamos el estado con nuestro identificador de pestaña antes de guardar
         state.last_changed_by = tabId;
-
         const { error } = await sb.from("reports").upsert({ id: "consolidado_atp", data: state });
         if (error) {
           console.error("Error de Supabase:", error);
@@ -321,18 +370,15 @@
             pendingState = cloudData;
           }
         } else {
-          // Si no hay datos en la nube, inicializar con el estado por defecto
-          state = {
-            meta: { proyecto: "", cliente: "", autor: "", fecha: new Date().toISOString().slice(0, 10) },
-            sedes: [makeSede("")]
-          };
+          // Si no hay datos, inicializamos con las 22 sedes predefinidas nacionales
+          state = makeDefaultState();
           await saveToCloud();
           render();
         }
         setStatus("Base de datos en línea ✓");
       } catch (e) {
         console.error(e);
-        setStatus("Error al cargar la base de datos. ¿Creaste la tabla 'reports'?", true);
+        setStatus("Error al cargar la base de datos.", true);
       }
 
       // 2. Escuchar cambios en tiempo real en la tabla de Supabase
@@ -345,8 +391,6 @@
             const cloudData = payload.new.data;
             if (!cloudData) return;
 
-            // ¡CRÍTICO! Si el cambio lo hicimos nosotros mismos desde esta pestaña, lo ignoramos.
-            // Esto evita que notificaciones atrasadas de guardados automáticos destruyan nuestro trabajo actual.
             if (cloudData.last_changed_by === tabId) {
               return;
             }
@@ -365,7 +409,6 @@
         .subscribe();
     }
 
-    // Aplicar estados en espera una vez se sale de los inputs para evitar interferencias
     document.addEventListener("focusout", () => {
       if (pendingState) {
         state = pendingState;
@@ -389,7 +432,6 @@
 
         if (error) throw error;
 
-        // Obtener la URL pública del bucket
         const { data: urlData } = sb.storage
           .from("evidencias")
           .getPublicUrl(filename);
@@ -408,18 +450,18 @@
         im.src = downloadUrl;
       } catch (e) {
         console.error(e);
-        setStatus("Error al subir imagen. ¿Creaste el bucket público 'evidencias'?", true);
+        setStatus("Error al subir imagen. Verifica el Storage.", true);
       }
     }
 
-    // ---------- Render ----------
+    // ---------- Render e Integridad en vivo ----------
     function render() {
       const container = $("#sedes-container");
 
       if (state.sedes.length === 0) {
         container.innerHTML = `
           <div class="bg-white rounded-xl border border-dashed border-slate-300 p-10 text-center text-slate-400">
-            Aún no hay sedes creadas. Agrega la primera con el botón de abajo.
+            Aún no hay sedes creadas. Haz clic en el botón de abajo o "Reiniciar Plantilla" para iniciar.
           </div>`;
       } else {
         container.innerHTML = state.sedes.map((sede, si) => sedeHTML(sede, si)).join("");
@@ -431,6 +473,33 @@
 
       restoreActive();
       updateMeters();
+      renderDashboard(); // Actualizar el dashboard lateral en cada cambio
+    }
+
+    // Dibuja la lista lateral del Dashboard con navegación por scroll
+    function renderDashboard() {
+      const dash = $("#dashboard-list");
+      if (!dash) return;
+
+      dash.innerHTML = state.sedes.map(sede => {
+        const total = sede.items.length;
+        const cargadas = sede.items.filter(i => i.img).length;
+        
+        let colorClass = "text-red-600 bg-red-50 border-red-200 hover:bg-red-100";
+        if (cargadas === total && total > 0) {
+          colorClass = "text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100";
+        } else if (cargadas > 0) {
+          colorClass = "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100";
+        }
+
+        return `
+          <button onclick="document.getElementById('${sede.id}').scrollIntoView({ behavior: 'smooth', block: 'center' })"
+                  class="w-full flex items-center justify-between text-left p-2 rounded-lg border text-[11px] font-bold transition ${colorClass}">
+            <span class="truncate pr-1 uppercase">${esc(sede.nombre || "SEDE SIN NOMBRE")}</span>
+            <span class="font-mono shrink-0 bg-white/70 px-1.5 py-0.5 rounded border border-current/20">${cargadas}/${total}</span>
+          </button>
+        `;
+      }).join("");
     }
 
     function sedeHTML(sede, si) {
@@ -441,13 +510,13 @@
       const barColor = complete ? "bg-emerald-500" : (cargadas === 0 ? "bg-slate-400" : "bg-amber-500");
 
       return `
-      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden" data-sede-card="${sede.id}">
+      <section class="bg-white rounded-xl border border-slate-200 overflow-hidden scroll-mt-24" id="${sede.id}" data-sede-card="${sede.id}">
         <div class="flex items-center gap-3 px-4 sm:px-5 py-3 border-b border-slate-100 bg-slate-50/60">
           <span class="font-mono text-xs text-slate-400">${String(si + 1).padStart(2, "0")}</span>
           <div class="flex-1">
             <input data-field="sede-nombre" data-sede="${sede.id}" value="${esc(sede.nombre)}"
                    placeholder="NOMBRE DE LA SEDE (ej: SEDE ABANCAY)"
-                   class="w-full bg-transparent text-base font-semibold uppercase tracking-wide placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-signal rounded px-2 py-1" />
+                   class="w-full bg-transparent text-base font-bold uppercase tracking-wide placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-signal rounded px-2 py-1" />
           </div>
           <div class="hidden sm:flex items-center gap-2 w-40">
             <div class="meter-track h-1.5 flex-1"><div class="meter-fill ${barColor}" style="width:${pct}%"></div></div>
@@ -465,7 +534,7 @@
 
         <div class="px-4 sm:px-5 pb-4">
           <button data-action="add-item" data-sede="${sede.id}"
-                  class="text-sm text-signalDark font-medium hover:underline">+ Agregar ítem personalizado</button>
+                  class="text-sm text-signalDark font-medium hover:underline">+ Agregar ítem personalizado para esta sede</button>
         </div>
       </section>`;
     }
@@ -555,302 +624,4 @@
     const container = $("#sedes-container");
 
     document.addEventListener("click", (e) => {
-      const dz = e.target.closest(".dropzone");
-      if (dz && !e.target.closest("[data-action]")) {
-        setActive(dz.getAttribute("data-sede"), dz.getAttribute("data-item"));
-        dz.focus();
-        return;
-      }
-      const btn = e.target.closest("[data-action]");
-      if (!btn) return;
-      const action = btn.getAttribute("data-action");
-      const sedeId = btn.getAttribute("data-sede");
-      const itemId = btn.getAttribute("data-item");
-
-      if (action === "remove-sede") {
-        const s = findSede(sedeId);
-        if (s && confirm(`¿Eliminar "${s.nombre || "sede sin nombre"}" y todas sus evidencias?`)) {
-          state.sedes = state.sedes.filter(x => x.id !== sedeId);
-          if (activeDropzone && activeDropzone.sedeId === sedeId) activeDropzone = null;
-          render(); saveToCloud();
-        }
-      } else if (action === "add-item") {
-        const s = findSede(sedeId);
-        if (s) { s.items.push(makeItem("Prueba adicional")); render(); saveToCloud(); }
-      } else if (action === "remove-item") {
-        const s = findSede(sedeId);
-        if (s) {
-          s.items = s.items.filter(i => i.id !== itemId);
-          if (activeDropzone && activeDropzone.itemId === itemId) activeDropzone = null;
-          render(); saveToCloud();
-        }
-      } else if (action === "remove-img") {
-        const it = findItem(sedeId, itemId);
-        if (it) { it.img = null; render(); saveToCloud(); }
-      } else if (action === "pick-file") {
-        const input = document.querySelector(`input[data-file-input][data-sede="${sedeId}"][data-item="${itemId}"]`);
-        if (input) input.click();
-      }
-    });
-
-    container.addEventListener("change", (e) => {
-      const inp = e.target.closest("input[data-file-input]");
-      if (!inp || !inp.files || !inp.files[0]) return;
-      handleBlobCloud(inp.files[0], { sedeId: inp.getAttribute("data-sede"), itemId: inp.getAttribute("data-item") });
-      inp.value = "";
-    });
-
-    document.addEventListener("input", (e) => {
-      const t = e.target;
-      const meta = t.getAttribute && t.getAttribute("data-meta");
-      if (meta) { state.meta[meta] = t.value; debouncedSave(); return; }
-
-      const field = t.getAttribute && t.getAttribute("data-field");
-      if (!field) return;
-      const sedeId = t.getAttribute("data-sede");
-      const itemId = t.getAttribute("data-item");
-
-      if (field === "sede-nombre") {
-        const s = findSede(sedeId); if (s) s.nombre = t.value;
-      } else if (field === "item-nombre") {
-        const it = findItem(sedeId, itemId); if (it) it.nombre = t.value;
-      } else if (field === "item-desc") {
-        const it = findItem(sedeId, itemId); if (it) it.descripcion = t.value;
-      }
-      debouncedSave();
-    });
-
-    document.addEventListener("paste", (e) => {
-      if (!activeDropzone) return;
-      const items = (e.clipboardData || window.clipboardData)?.items;
-      if (!items) return;
-      for (const it of items) {
-        if (it.type && it.type.indexOf("image") === 0) {
-          const blob = it.getAsFile();
-          if (blob) { handleBlobCloud(blob, activeDropzone); e.preventDefault(); }
-          return;
-        }
-      }
-      setStatus("El portapapeles no contiene una imagen.", true);
-    });
-
-    container.addEventListener("dragover", (e) => {
-      const dz = e.target.closest(".dropzone");
-      if (!dz) return;
-      e.preventDefault();
-      dz.classList.add("is-dragover");
-    });
-    container.addEventListener("dragleave", (e) => {
-      const dz = e.target.closest(".dropzone");
-      if (dz) dz.classList.remove("is-dragover");
-    });
-    container.addEventListener("drop", (e) => {
-      const dz = e.target.closest(".dropzone");
-      if (!dz) return;
-      e.preventDefault();
-      dz.classList.remove("is-dragover");
-      const file = e.dataTransfer?.files?.[0];
-      if (file) handleBlobCloud(file, { sedeId: dz.getAttribute("data-sede"), itemId: dz.getAttribute("data-item") });
-    });
-
-    function addSede() {
-      const s = makeSede("");
-      state.sedes.push(s);
-      render(); saveToCloud();
-      const inp = document.querySelector(`input[data-field="sede-nombre"][data-sede="${s.id}"]`);
-      if (inp) { inp.focus(); inp.scrollIntoView({ behavior: "smooth", block: "center" }); }
-    }
-    $("#btn-add-sede").addEventListener("click", addSede);
-    
-    $("#btn-reset").addEventListener("click", () => {
-      if (confirm("¿Borrar toda la base de datos común de Supabase? Esto afectará a TODOS los usuarios.")) {
-        state = { meta: { proyecto: "", cliente: "", autor: "", fecha: new Date().toISOString().slice(0, 10) }, sedes: [] };
-        activeDropzone = null;
-        render(); saveToCloud();
-      }
-    });
-
-    $("#btn-generate").addEventListener("click", generarDocx);
-    $("#btn-generate-2").addEventListener("click", generarDocx);
-
-    // ================= TRADUCCIÓN BINARIA E IMÁGENES =================
-    async function getImageBytes(urlOrDataUrl) {
-      const res = await fetch(urlOrDataUrl);
-      const blob = await res.blob();
-      const buffer = await blob.arrayBuffer();
-      return new Uint8Array(buffer);
-    }
-
-    // ================= GENERACIÓN DEL .DOCX (ASÍNCRONO) =================
-    async function generarDocx() {
-      if (typeof window.docx === "undefined") {
-        setStatus("La librería de Word no cargó. Revisa tu conexión de red.", true);
-        return;
-      }
-      if (state.sedes.length === 0) { setStatus("Agrega al menos una sede antes de generar.", true); return; }
-
-      const D = window.docx;
-      const { Document, Packer, Paragraph, TextRun, ImageRun, HeadingLevel, AlignmentType, PageNumber, Header, Footer } = D;
-
-      const FONT = "Aptos";
-      const faltantes = [];
-      let figN = 0;
-
-      const children = [];
-
-      // Portada / título
-      children.push(new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 120 },
-        children: [new TextRun({ text: "REPORTE CONSOLIDADO DE PROTOCOLO DE PRUEBAS (ATP)", bold: true, size: 32, font: FONT })]
-      }));
-
-      const metaLine = (label, val) => new Paragraph({
-        alignment: AlignmentType.CENTER, spacing: { after: 40 },
-        children: [
-          new TextRun({ text: label + ": ", bold: true, size: 20, font: FONT, color: "334155" }),
-          new TextRun({ text: (val || "—"), size: 20, font: FONT, color: "334155" })
-        ]
-      });
-      children.push(metaLine("Proyecto", state.meta.proyecto));
-      children.push(metaLine("Cliente", state.meta.cliente));
-      children.push(metaLine("Elaborado por", state.meta.autor));
-      children.push(metaLine("Fecha", state.meta.fecha));
-      children.push(new Paragraph({ text: "", spacing: { after: 160 } }));
-
-      setStatus("Descargando imágenes y construyendo documento de Word...");
-
-      for (let si = 0; si < state.sedes.length; si++) {
-        const sede = state.sedes[si];
-        const nombre = (sede.nombre || `SEDE ${si + 1}`).toUpperCase();
-
-        children.push(new Paragraph({
-          heading: HeadingLevel.HEADING_1,
-          pageBreakBefore: si > 0,
-          spacing: { before: si > 0 ? 0 : 120, after: 120 },
-          children: [new TextRun({ text: nombre, bold: true, size: 28, font: FONT, color: "1D4ED8" })]
-        }));
-
-        for (const item of sede.items) {
-          const tituloItem = item.nombre || "Prueba";
-          children.push(new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 120, after: 60 },
-            children: [new TextRun({ text: tituloItem, bold: true, size: 24, font: FONT, color: "0F172A" })]
-          }));
-
-          if (item.img && item.img.dataUrl) {
-            figN++;
-            let h = Math.round(TARGET_WIDTH_PX * (item.img.h / item.img.w));
-            if (!isFinite(h) || h <= 0) h = TARGET_WIDTH_PX;
-
-            try {
-              const imgBytes = await getImageBytes(item.img.dataUrl);
-
-              children.push(new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { before: 40, after: 20 },
-                children: [new ImageRun({
-                  data: imgBytes,
-                  transformation: { width: TARGET_WIDTH_PX, height: h }
-                })]
-              }));
-
-              const caption = `Figura ${figN}: ${item.descripcion || tituloItem} — ${nombre}`;
-              children.push(new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 160 },
-                children: [new TextRun({ text: caption, italics: true, size: 18, font: FONT, color: "475569" })]
-              }));
-            } catch (errImg) {
-              console.error(errImg);
-              children.push(new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { before: 40, after: 160 },
-                shading: { type: "clear", fill: "FEE2E2" },
-                children: [new TextRun({
-                  text: `[ERROR al procesar imagen de Supabase para ${nombre}]`,
-                  bold: true, color: "DC2626", size: 20, font: FONT
-                })]
-              }));
-            }
-          } else {
-            faltantes.push(`${tituloItem} — ${nombre}`);
-            children.push(new Paragraph({
-              alignment: AlignmentType.CENTER,
-              spacing: { before: 40, after: 160 },
-              shading: { type: "clear", fill: "FEE2E2" },
-              children: [new TextRun({
-                text: `[ALERTA: Evidencia no cargada para esta prueba - ${nombre}]`,
-                bold: true, color: "DC2626", size: 20, font: FONT
-              })]
-            }));
-          }
-        }
-      }
-
-      const doc = new Document({
-        creator: state.meta.autor || "Colector ATP Cloud",
-        title: "Reporte ATP",
-        styles: { default: { document: { run: { font: FONT, size: 22 } } } },
-        sections: [{
-          properties: {
-            page: {
-              size: { width: 11906, height: 16838 }, // A4
-              margin: { top: 1134, right: 1134, bottom: 1134, left: 1134 } // 2 cm
-            }
-          },
-          headers: {
-            default: new Header({
-              children: [new Paragraph({
-                alignment: AlignmentType.RIGHT,
-                children: [new TextRun({ text: (state.meta.proyecto || "Reporte ATP"), size: 16, color: "94A3B8", font: FONT })]
-              })]
-            })
-          },
-          footers: {
-            default: new Footer({
-              children: [new Paragraph({
-                alignment: AlignmentType.CENTER,
-                children: [new TextRun({ children: ["Página ", PageNumber.CURRENT, " de ", PageNumber.TOTAL_PAGES], size: 16, color: "94A3B8", font: FONT })]
-              })]
-            })
-          },
-          children
-        }]
-      });
-
-      if (faltantes.length > 0) {
-        const seguir = confirm(
-          `Se generará el reporte con ${faltantes.length} evidencia(s) FALTANTE(s), marcadas en rojo en el Word:\n\n` +
-          faltantes.slice(0, 12).map(f => "• " + f).join("\n") +
-          (faltantes.length > 12 ? `\n… y ${faltantes.length - 12} más` : "") +
-          "\n\n¿Deseas continuar?"
-        );
-        if (!seguir) { setStatus("Base de datos en línea ✓"); return; }
-      }
-
-      Packer.toBlob(doc).then(blob => {
-        const proj = (state.meta.proyecto || "ATP").replace(/[^\w\-]+/g, "_").slice(0, 40);
-        const fecha = (state.meta.fecha || new Date().toISOString().slice(0, 10));
-        downloadBlob(blob, `Reporte_${proj}_${fecha}.docx`);
-        setStatus(`Reporte generado ✓ (${figN} evidencia(s), ${faltantes.length} faltante(s))`);
-      }).catch(err => {
-        console.error(err);
-        setStatus("Error al generar el .docx: " + (err && err.message ? err.message : err), true);
-      });
-    }
-
-    function downloadBlob(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
-    }
-  })();
-  </script>
-</body>
-</html>
+      const dz = e.target.closest(".
