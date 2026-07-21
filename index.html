@@ -219,6 +219,7 @@
     let activeDropzone = null; // { sedeId, itemId }
     let isWriting = false;     // Evita loops infinitos de actualización
     let pendingState = null;   // Almacena actualizaciones mientras el usuario escribe
+    let avisoPlantillaAntigua = false; // Para no repetir el aviso de sesión desactualizada
     function makeItem(nombre) {
       return { id: nid(), nombre, descripcion: nombre, img: null };
     }
@@ -415,11 +416,14 @@
               return;
             }
             // Si otra pestaña sigue abierta con la plantilla ANTERIOR, su versión llega
-            // desactualizada. No la aceptamos y reimponemos la plantilla vigente.
+            // desactualizada. La ignoramos (sin reescribir, para no entrar en ping-pong
+            // de escrituras que provocaría re-renders constantes y perdería la selección).
             if ((cloudData.tpl || 0) < TEMPLATE_VERSION) {
               console.warn("Se ignoró una actualización con plantilla antigua (tpl=" + (cloudData.tpl || 0) + ").");
-              setStatus("Se bloqueó una sesión con plantilla antigua. Pide al equipo recargar la página (Ctrl+F5).", true);
-              saveToCloud();
+              if (!avisoPlantillaAntigua) {
+                avisoPlantillaAntigua = true;
+                setStatus("Hay una sesión con la plantilla antigua abierta. Pide al equipo recargar con Ctrl+F5.", true);
+              }
               return;
             }
             const isTyping = document.activeElement && 
@@ -608,12 +612,28 @@
         const on = dz.getAttribute("data-sede") === sedeId && dz.getAttribute("data-item") === itemId;
         dz.classList.toggle("is-active", on);
       });
+      const it = findItem(sedeId, itemId);
+      setStatus(`Casilla lista: ${it ? it.nombre : "prueba"} — ahora pega con Ctrl+V`);
     }
     function restoreActive() {
       if (!activeDropzone) return;
       const dz = document.querySelector(`.dropzone[data-sede="${activeDropzone.sedeId}"][data-item="${activeDropzone.itemId}"]`);
-      if (dz) dz.classList.add("is-active");
-      else activeDropzone = null;
+      if (dz) {
+        dz.classList.add("is-active");
+        // Si el re-dibujo destruyó el elemento que tenía el foco, se lo devolvemos:
+        // sin foco, el Ctrl+V no sabría dónde pegar.
+        const hayCampoEnUso = document.activeElement &&
+          (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
+        const yaEnDropzone = document.activeElement && document.activeElement.closest
+          ? document.activeElement.closest(".dropzone")
+          : null;
+        if (!hayCampoEnUso && !yaEnDropzone) {
+          dz.focus({ preventScroll: true });
+        }
+      } else if (!findItem(activeDropzone.sedeId, activeDropzone.itemId)) {
+        // Solo se descarta la selección si el ítem realmente ya no existe.
+        activeDropzone = null;
+      }
     }
     function setStatus(msg, isError) {
       const el = $("#status-line");
@@ -704,17 +724,31 @@
       debouncedSave();
     });
     document.addEventListener("paste", (e) => {
-      if (!activeDropzone) return;
+      // Prioridad 1: el recuadro que realmente tiene el foco en pantalla.
+      // Prioridad 2: la última casilla seleccionada (por si el foco se perdió en un re-dibujo).
+      let target = null;
+      const enfocado = document.activeElement && document.activeElement.closest
+        ? document.activeElement.closest(".dropzone")
+        : null;
+      if (enfocado) {
+        target = { sedeId: enfocado.getAttribute("data-sede"), itemId: enfocado.getAttribute("data-item") };
+      } else if (activeDropzone && findItem(activeDropzone.sedeId, activeDropzone.itemId)) {
+        target = activeDropzone;
+      }
+      if (!target) {
+        setStatus("Primero haz clic en el recuadro de la prueba (queda con borde azul) y luego pega.", true);
+        return;
+      }
       const items = (e.clipboardData || window.clipboardData)?.items;
       if (!items) return;
       for (const it of items) {
         if (it.type && it.type.indexOf("image") === 0) {
           const blob = it.getAsFile();
-          if (blob) { handleBlobCloud(blob, activeDropzone); e.preventDefault(); }
+          if (blob) { handleBlobCloud(blob, target); e.preventDefault(); }
           return;
         }
       }
-      setStatus("El portapapeles no contiene una imagen.", true);
+      setStatus("El portapapeles no contiene una imagen. Usa una captura de pantalla (Impr Pant o Win+Shift+S).", true);
     });
     function addSede() {
       const s = makeSede("");
