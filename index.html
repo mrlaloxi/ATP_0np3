@@ -183,21 +183,25 @@
       "TARAPOTO", "TRUJILLO", "HUANCAVELICA"
     ];
     const ITEMS_PREDEFINIDOS = [
-  "Gabinete de comunicaciones y equipamiento instalado",
-  "Ping y tracert hacia la sede cabecera",
-  "Navegación a servicios institucionales",
-  "Túnel IPsec establecido con cifrado AES-CBC-256 y autenticación SHA-256",
-  "Tráfico cursando por el túnel IPsec cifrado",
-  "Captura de paquetes ESP cifrados entre extremos del túnel",
-  "Sesiones ADVPN activas sobre túneles cifrados",
-  "Ping y tracert por enlace principal desde PC cliente en sede remota",
-  "Ping hacia 10.50.21.10 desde la sede cabecera",
-  "Prueba de conmutación y conectividad por el enlace backup",
-  "Ping y tracert por enlace secundario desde PC cliente en sede remota",
-  "Tiempo de conmutación medido desde PC cliente en sede remota",
-  "Restablecimiento del enlace principal verificado desde la sede cabecera",
-  "Restablecimiento del enlace principal verificado desde la sede remota"
-];
+      "Gabinete de comunicaciones y equipamiento instalado",
+      "Ping y tracert hacia la sede cabecera",
+      "Navegación a servicios institucionales",
+      "Túnel IPsec establecido con cifrado AES-CBC-256 y autenticación SHA-256",
+      "Tráfico cursando por el túnel IPsec cifrado",
+      "Captura de paquetes ESP cifrados entre extremos del túnel",
+      "Sesiones ADVPN activas sobre túneles cifrados",
+      "Ping y tracert por enlace principal desde PC cliente en sede remota",
+      "Ping hacia 10.50.21.10 desde la sede cabecera",
+      "Prueba de conmutación y conectividad por el enlace backup",
+      "Ping y tracert por enlace secundario desde PC cliente en sede remota",
+      "Tiempo de conmutación medido desde PC cliente en sede remota",
+      "Restablecimiento del enlace principal verificado desde la sede cabecera",
+      "Restablecimiento del enlace principal verificado desde la sede remota"
+    ];
+    // Versión de la plantilla. Súbele el número cada vez que cambies ITEMS_PREDEFINIDOS.
+    // Sirve para que una pestaña vieja (con la lista anterior en memoria) no sobrescriba
+    // la plantilla vigente en Supabase.
+    const TEMPLATE_VERSION = 2;
     const CM_TO_PX = 37.795275591; // 96 dpi
     const TARGET_WIDTH_PX = Math.round(14 * CM_TO_PX); // 14 cm ≈ 529 px
     // ---------- Utilidades de Selección DOM ----------
@@ -245,6 +249,7 @@
         };
       });
       return {
+        tpl: TEMPLATE_VERSION,
         meta: { proyecto: "", cliente: "", autor: "", fecha: new Date().toISOString().slice(0, 10) },
         sedes: defaultSedes
       };
@@ -336,22 +341,41 @@
           const scan = (id) => { const n = parseInt(String(id).replace("id", ""), 10); if (!isNaN(n) && n > max) max = n; };
           cloudData.sedes.forEach(s => { scan(s.id); s.items.forEach(i => scan(i.id)); });
           uid = max + 1;
-          // ================= MIGRACIÓN INTELIGENTE EN CALIENTE =================
+          // ================= RECONCILIACIÓN DE PLANTILLA =================
+          // Deja EXACTAMENTE los ítems de ITEMS_PREDEFINIDOS, en su orden.
+          // - Si el ítem ya existía: conserva su id, descripción e imagen.
+          // - Si es nuevo: lo crea vacío.
+          // - Si es obsoleto (ya no está en la lista): lo elimina, PERO solo si no
+          //   tiene evidencia cargada. Si tiene imagen, se conserva al final para no
+          //   perder trabajo de campo, y se marca para que el equipo lo revise.
           let huboMigracion = false;
+          let obsoletosConservados = 0;
+          const norm = (s) => String(s || "").trim().toLowerCase();
           cloudData.sedes.forEach(sede => {
-            const nombresExistentes = sede.items.map(item => item.nombre.trim().toLowerCase());
-            ITEMS_PREDEFINIDOS.forEach(testName => {
-              if (!nombresExistentes.includes(testName.trim().toLowerCase())) {
-                sede.items.push({
-                  id: nid(),
-                  nombre: testName,
-                  descripcion: testName,
-                  img: null
-                });
-                huboMigracion = true;
+            const previos = Array.isArray(sede.items) ? sede.items : [];
+            const usados = new Set();
+            const reconciliados = ITEMS_PREDEFINIDOS.map(testName => {
+              const encontrado = previos.find(it => !usados.has(it.id) && norm(it.nombre) === norm(testName));
+              if (encontrado) {
+                usados.add(encontrado.id);
+                encontrado.nombre = testName; // normaliza acentos/mayúsculas al texto oficial
+                return encontrado;
               }
+              huboMigracion = true;
+              return { id: nid(), nombre: testName, descripcion: testName, img: null };
             });
+            // Obsoletos: se descartan los vacíos; se preservan los que tienen evidencia.
+            previos.forEach(it => {
+              if (usados.has(it.id)) return;
+              if (it.img) { reconciliados.push(it); obsoletosConservados++; }
+              huboMigracion = true;
+            });
+            sede.items = reconciliados;
           });
+          if ((cloudData.tpl || 0) !== TEMPLATE_VERSION) {
+            cloudData.tpl = TEMPLATE_VERSION;
+            huboMigracion = true;
+          }
           const isTyping = document.activeElement && 
                            (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA");
           
@@ -360,7 +384,9 @@
             render();
             if (huboMigracion) {
               await saveToCloud();
-              setStatus("Base de datos sincronizada y migrada con nuevas pruebas ✓");
+              setStatus(obsoletosConservados > 0
+                ? `Plantilla actualizada ✓ (se conservaron ${obsoletosConservados} ítem(s) fuera de plantilla porque tenían evidencia)`
+                : "Plantilla actualizada a las pruebas vigentes ✓");
             }
           } else {
             pendingState = cloudData;
@@ -386,6 +412,14 @@
             const cloudData = payload.new.data;
             if (!cloudData) return;
             if (cloudData.last_changed_by === tabId) {
+              return;
+            }
+            // Si otra pestaña sigue abierta con la plantilla ANTERIOR, su versión llega
+            // desactualizada. No la aceptamos y reimponemos la plantilla vigente.
+            if ((cloudData.tpl || 0) < TEMPLATE_VERSION) {
+              console.warn("Se ignoró una actualización con plantilla antigua (tpl=" + (cloudData.tpl || 0) + ").");
+              setStatus("Se bloqueó una sesión con plantilla antigua. Pide al equipo recargar la página (Ctrl+F5).", true);
+              saveToCloud();
               return;
             }
             const isTyping = document.activeElement && 
